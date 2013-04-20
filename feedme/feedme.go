@@ -3,14 +3,12 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
-	"appengine/urlfetch"
 	"appengine/user"
 	"html/template"
 	"net/http"
 	"sort"
 )
 
-//var rootTemplate = template.Must(template.ParseFiles("tmplt/root.html"))
 var feedTemplate = template.Must(template.ParseFiles("tmplt/feed.html"))
 
 type UserInfo struct {
@@ -36,8 +34,7 @@ func root(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := urlfetch.Client(c)
-	feed, err := fetchAll(client, uinfo.Feeds)
+	feed, err := fetchAll(c, uinfo.Feeds)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -59,9 +56,8 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check tha the feed is even valid.
-	client := urlfetch.Client(c)
 	url := r.FormValue("url")
-	_, err := fetchFeed(client, url)
+	_, err := fetchFeed(c, url)
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return

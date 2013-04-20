@@ -1,13 +1,14 @@
 package feedme
 
 import (
-	"net/http"
+	"appengine"
+	"appengine/urlfetch"
 
 	rss "github.com/zippoxer/RSS-Go"
 )
 
 type Article struct {
-	// Origin is the RSS feed from which this article originated.
+	// Origin is the originating feed.
 	Origin *rss.Feed
 	*rss.Item
 }
@@ -38,8 +39,8 @@ func (f Feed) Swap(i, j int) {
 }
 
 // FetchFeed returns a Feed fetched from the given URL.
-func fetchFeed(client *http.Client, url string) (Feed, error) {
-	resp, err := client.Get(url)
+func fetchFeed(c appengine.Context, url string) (Feed, error) {
+	resp, err := urlfetch.Client(c).Get(url)
 	if err != nil {
 		return Feed{}, err
 	}
@@ -57,10 +58,10 @@ func fetchFeed(client *http.Client, url string) (Feed, error) {
 }
 
 // FetchAll returns an aggregate feed fetched from a set of URLs.
-func fetchAll(client *http.Client, feeds []string) (Feed, error) {
+func fetchAll(c appengine.Context, feeds []string) (Feed, error) {
 	var as []Article
 	for _, url := range feeds {
-		f, err := fetchFeed(client, url)
+		f, err := fetchFeed(c, url)
 		if err != nil {
 			return Feed{}, err
 		}
