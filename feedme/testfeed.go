@@ -1,7 +1,11 @@
 package feedme
 
-// Some arbitrary RSS feed for testing without needing to fetch.
-const testFeed = `
+var feeds = []string{
+	feed0,
+	feed1,
+}
+
+const feed0 = `
 <?xml version="1.0" encoding="UTF-8"?>
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0" xmlns:posterous="http://posterous.com/help/rss/1.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:media="http://search.yahoo.com/mrss/">
 <channel>
@@ -1565,5 +1569,815 @@ There were two talks: I was preceded by designer <a href="http://laurakalbag.com
       </media:content>
     </item>
   </channel>
+</rss>
+`
+
+const feed1 = `
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" media="screen" href="/~d/styles/rss2full.xsl"?><?xml-stylesheet type="text/css" media="screen" href="http://feeds.arstechnica.com/~d/styles/itemcontent.css"?><rss xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:slash="http://purl.org/rss/1.0/modules/slash/" xmlns:feedburner="http://rssnamespace.org/feedburner/ext/1.0" version="2.0">
+
+<channel>
+	<title>Ars Technica » Scientific Method</title>
+	
+	<link>http://arstechnica.com</link>
+	<description>The Art of Technology</description>
+	<lastBuildDate>Sat, 20 Apr 2013 16:01:59 +0000</lastBuildDate>
+	<language>en-US</language>
+	<sy:updatePeriod>hourly</sy:updatePeriod>
+	<sy:updateFrequency>1</sy:updateFrequency>
+	<generator>http://wordpress.org/?v=3.5.1</generator>
+		<atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="self" type="application/rss+xml" href="http://feeds.arstechnica.com/arstechnica/science" /><feedburner:info uri="arstechnica/science" /><atom10:link xmlns:atom10="http://www.w3.org/2005/Atom" rel="hub" href="http://pubsubhubbub.appspot.com/" /><feedburner:feedFlare href="http://www.plusmo.com/add?url=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://plusmo.com/res/graphics/fbplusmo.gif">Subscribe with Plusmo</feedburner:feedFlare><feedburner:feedFlare href="http://www.thefreedictionary.com/_/hp/AddRSS.aspx?http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://img.tfd.com/hp/addToTheFreeDictionary.gif">Subscribe with The Free Dictionary</feedburner:feedFlare><feedburner:feedFlare href="http://www.bitty.com/manual/?contenttype=rssfeed&amp;contentvalue=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://www.bitty.com/img/bittychicklet_91x17.gif">Subscribe with Bitty Browser</feedburner:feedFlare><feedburner:feedFlare href="http://www.newsalloy.com/?rss=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://www.newsalloy.com/subrss3.gif">Subscribe with NewsAlloy</feedburner:feedFlare><feedburner:feedFlare href="http://www.live.com/?add=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://tkfiles.storage.msn.com/x1piYkpqHC_35nIp1gLE68-wvzLZO8iXl_JMledmJQXP-XTBOLfmQv4zhj4MhcWEJh_GtoBIiAl1Mjh-ndp9k47If7hTaFno0mxW9_i3p_5qQw">Subscribe with Live.com</feedburner:feedFlare><feedburner:feedFlare href="http://mix.excite.eu/add?feedurl=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://image.excite.co.uk/mix/addtomix.gif">Subscribe with Excite MIX</feedburner:feedFlare><feedburner:feedFlare href="http://download.attensa.com/app/get_attensa.html?feedurl=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://www.attensa.com/blogs/attensa/WindowsLiveWriter/BadgeredintoBadges_10C02/attensa_feed_button5.gif">Subscribe with Attensa for Outlook</feedburner:feedFlare><feedburner:feedFlare href="http://www.webwag.com/wwgthis.php?url=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://www.webwag.com/images/wwgthis.gif">Subscribe with Webwag</feedburner:feedFlare><feedburner:feedFlare href="http://www.podcastready.com/oneclick_bookmark.php?url=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://www.podcastready.com/images/podcastready_button.gif">Subscribe with Podcast Ready</feedburner:feedFlare><feedburner:feedFlare href="http://www.flurry.com/pushRssFeed.do?r=fb&amp;url=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://www.flurry.com/images/flurry_rss_logo2.gif">Subscribe with Flurry</feedburner:feedFlare><feedburner:feedFlare href="http://www.wikio.com/subscribe?url=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://www.wikio.com/shared/img/add2wikio.gif">Subscribe with Wikio</feedburner:feedFlare><feedburner:feedFlare href="http://www.dailyrotation.com/index.php?feed=http%3A%2F%2Ffeeds.arstechnica.com%2Farstechnica%2Fscience" src="http://www.dailyrotation.com/rss-dr2.gif">Subscribe with Daily Rotation</feedburner:feedFlare><feedburner:browserFriendly>This is an XML content feed. It is intended to be viewed in a newsreader or syndicated to another site, subject to copyright and fair use.</feedburner:browserFriendly><item>
+		<title>Interactive map plots locations of more than 100 million species</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/5U2zfVNz7U0/</link>
+		<comments>http://arstechnica.com/science/2013/04/interactive-map-plots-locations-of-more-than-100-million-species/#comments</comments>
+		<pubDate>Sat, 20 Apr 2013 14:05:35 +0000</pubDate>
+		<dc:creator>WIRED UK</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[biodiversity]]></category>
+		<category><![CDATA[endangered species]]></category>
+		<category><![CDATA[USGS]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=249715</guid>
+		<description><![CDATA[It's the most comprehensive map of US biodiversity ever made.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap"> <p>The <a href="http://www.usgs.gov/">United States Geological Society</a> (USGS) has launched an online database and map that keeps track of more than 100 million different species and where they live within the United States,</p>
+<p>Biodiversity Serving Our Nation, or <a href="http://bison.usgs.ornl.gov/">BISON</a> (a backronym if ever there was one), contains location-specific records of where living species are within the US. Its data comes from hundreds of different organisations and thousands of scientists, making it the most comprehensive map of American biodiversity ever made.</p>
+<p>Anyone can search by scientific or common name of any living species (plant or animal), and can look to see what lives within any specific geographic area they want by drawing a perimeter—so, for example, searching to see exactly which forests in Virginia have been infected with a tree fungus.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/interactive-map-plots-locations-of-more-than-100-million-species/#p3">Read 6 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/interactive-map-plots-locations-of-more-than-100-million-species/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=5U2zfVNz7U0:Sxy21Q_2poE:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=5U2zfVNz7U0:Sxy21Q_2poE:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=5U2zfVNz7U0:Sxy21Q_2poE:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=5U2zfVNz7U0:Sxy21Q_2poE:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=5U2zfVNz7U0:Sxy21Q_2poE:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=5U2zfVNz7U0:Sxy21Q_2poE:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/5U2zfVNz7U0" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/interactive-map-plots-locations-of-more-than-100-million-species/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/interactive-map-plots-locations-of-more-than-100-million-species/</feedburner:origLink></item>
+		<item>
+		<title>This new microbattery is interesting, but not as good as the hype</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/_C3kkuXeycQ/</link>
+		<comments>http://arstechnica.com/science/2013/04/this-new-microbattery-is-interesting-but-not-as-good-as-the-hype/#comments</comments>
+		<pubDate>Fri, 19 Apr 2013 17:55:25 +0000</pubDate>
+		<dc:creator>John Timmer</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[batteries]]></category>
+		<category><![CDATA[materials science]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=249607</guid>
+		<description><![CDATA[Tiny battery delivers power like a supercapacitor, but performance fades fast.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/Screen-Shot-2013-04-19-at-1.10.14-PM-640x401.png"><div class="caption" style="font-size:0.8em">
+			<div class="caption-text">The alternating metal foam electrodes. Scale bar is 50 micrometers.</div>
+	
+			<div class="caption-credit">
+							From Pikul et. al., referenced here.				</div>
+	  </div>
+  </div>
+ <p>Battery technology is advancing fast—just compare the Watt-hours you can stuff into current devices to what was on the market a few decades ago (the Powerbook 140 had a 4200 mAh battery, while the current iPad has nearly three times that capacity). Research is continuing to advance at a rapid pace, which is why it sometimes seems like we cover a new miracle battery every month. We try to make it clear that most of these are still years away from commercialization, and some technologies will just never get there.</p>
+<p>It's with that caution in mind that we turn to a battery development that was even picked up <a href="http://www.bbc.co.uk/news/technology-22191650">by the BBC</a> earlier this week. In a new paper, researchers have reported that they are developing a microscopic battery that's suitable for integrating directly into electronics, just as capacitors now are. Compared to existing capacitors, its performance is impressive. That announcement doesn't mean, however, that these things can be scaled up to work as full-sized batteries that can power gadgets or cars. There are also a few hitches, like rapidly degrading performance, that need to be worked out.</p>
+<p>That said, making the batteries is a pretty impressive process. In general, the batteries we buy are made from bulk processes, where materials self-organize into the different parts necessary to get the battery to work. This self-organization can be directed to a greater or lesser degree, but it's still dependent upon the material properties of the battery components.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/this-new-microbattery-is-interesting-but-not-as-good-as-the-hype/#p3">Read 8 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/this-new-microbattery-is-interesting-but-not-as-good-as-the-hype/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=_C3kkuXeycQ:VDAnom6a93I:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=_C3kkuXeycQ:VDAnom6a93I:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=_C3kkuXeycQ:VDAnom6a93I:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=_C3kkuXeycQ:VDAnom6a93I:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=_C3kkuXeycQ:VDAnom6a93I:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=_C3kkuXeycQ:VDAnom6a93I:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/_C3kkuXeycQ" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/this-new-microbattery-is-interesting-but-not-as-good-as-the-hype/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/this-new-microbattery-is-interesting-but-not-as-good-as-the-hype/</feedburner:origLink></item>
+		<item>
+		<title>Barcodes let scientists track every ant in a colony</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/J2a3u7h4OXE/</link>
+		<comments>http://arstechnica.com/science/2013/04/barcodes-let-scientists-track-every-ant-in-a-colony/#comments</comments>
+		<pubDate>Fri, 19 Apr 2013 16:00:00 +0000</pubDate>
+		<dc:creator>Ars Staff</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[ants]]></category>
+		<category><![CDATA[Biology]]></category>
+		<category><![CDATA[entomology]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=249343</guid>
+		<description><![CDATA[Study tracks workers as they change jobs with age.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/mersch1HR-640x719.jpg"><div class="caption" style="font-size:0.8em">
+			<div class="caption-text">A barcoded ant gets to work.</div>
+	
+			<div class="caption-credit">
+							Alessandro Crespi				</div>
+	  </div>
+  </div>
+ <p>For creatures with very small brains, ants build strikingly complex societies. How a colony of hundreds or thousands of ants maintains order remains poorly understood, but new high tech research methods might be able to shed some light on the complexity of the colony.</p>
+<p>A team of Swiss scientists glued barcodes to hundreds of ants living in six laboratory colonies and recorded all of their movements for more than a month. The video analysis recorded the position and orientation of every ant, twice a second. They published the results of the ant tracking in <em>Science</em> this week.</p>
+<p>What can you learn from watching 9 million ant-to-ant interactions?</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/barcodes-let-scientists-track-every-ant-in-a-colony/#p3">Read 8 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/barcodes-let-scientists-track-every-ant-in-a-colony/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=J2a3u7h4OXE:-aIsBXBRsA8:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=J2a3u7h4OXE:-aIsBXBRsA8:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=J2a3u7h4OXE:-aIsBXBRsA8:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=J2a3u7h4OXE:-aIsBXBRsA8:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=J2a3u7h4OXE:-aIsBXBRsA8:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=J2a3u7h4OXE:-aIsBXBRsA8:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/J2a3u7h4OXE" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/barcodes-let-scientists-track-every-ant-in-a-colony/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/barcodes-let-scientists-track-every-ant-in-a-colony/</feedburner:origLink></item>
+		<item>
+		<title>Poor, cute bunnies likely to get eaten when the snow melts early</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/Vf1FrLWTFeY/</link>
+		<comments>http://arstechnica.com/science/2013/04/poor-cute-bunnies-likely-to-get-eaten-when-the-snow-melts-early/#comments</comments>
+		<pubDate>Fri, 19 Apr 2013 14:00:34 +0000</pubDate>
+		<dc:creator>Diana Gitig</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[Biology]]></category>
+		<category><![CDATA[climate change]]></category>
+		<category><![CDATA[Earth sciences]]></category>
+		<category><![CDATA[Ecology]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=247011</guid>
+		<description><![CDATA[Hares change coat color for winter based on the calendar, not the conditions.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/82C795C8-1DD8-B71C-07793A6439519ECE-640x480.jpg"><div class="caption" style="font-size:0.8em">
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://www.nps.gov/common/uploads/photogallery/akr/park/gaar/82C795C8-1DD8-B71C-07793A6439519ECE/82C795C8-1DD8-B71C-07793A6439519ECE.jpg">National Park Service</a>
+				</div>
+	  </div>
+  </div>
+ <p><em>Animals that turn white in winter are having a mismatch with the reduced snowpack in their environments.</em></p>
+<p>Measuring the impact of climate change on animals is difficult, because (a) climate change is complex and (b) animals are complex. Climate change can alter the environment in many different ways, and each of these changes can affect the food supplies, hibernation patterns, reproductive behavior, and migratory patterns of different animal species. The changes in the animals all affect each other, too, since many of them are interrelated in food chains and webs that can be hard to disentangle.</p>
+<p>Luckily, researchers at the University of Montana stumbled upon one simple, obvious part of an animal that they could measure in response to a simple, obvious change in climate. Snowshoe hares change color from brown to white in the winter so they can be camouflaged in the snow. So do at least nine other species of cute, cuddly mammals: Arctic foxes, collared lemmings, long-tailed weasels, stoats, mountain hares, Arctic hares, white-tailed jackrabbits, Siberian hamsters, and least weasels. (Bet you didn't know that hamsters are tough enough to handle winter in Siberia.)</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/poor-cute-bunnies-likely-to-get-eaten-when-the-snow-melts-early/#p3">Read 5 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/poor-cute-bunnies-likely-to-get-eaten-when-the-snow-melts-early/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Vf1FrLWTFeY:R2K50ohef9Q:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=Vf1FrLWTFeY:R2K50ohef9Q:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Vf1FrLWTFeY:R2K50ohef9Q:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=Vf1FrLWTFeY:R2K50ohef9Q:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Vf1FrLWTFeY:R2K50ohef9Q:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Vf1FrLWTFeY:R2K50ohef9Q:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/Vf1FrLWTFeY" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/poor-cute-bunnies-likely-to-get-eaten-when-the-snow-melts-early/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/poor-cute-bunnies-likely-to-get-eaten-when-the-snow-melts-early/</feedburner:origLink></item>
+		<item>
+		<title>Stressed out moms mean faster growing babies—if you’re a squirrel</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/eRWOV8Z6Qw0/</link>
+		<comments>http://arstechnica.com/science/2013/04/stressed-out-moms-mean-faster-growing-babiesif-youre-a-squirrel/#comments</comments>
+		<pubDate>Thu, 18 Apr 2013 20:30:06 +0000</pubDate>
+		<dc:creator>Kate Shaw</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[behavior]]></category>
+		<category><![CDATA[Biology]]></category>
+		<category><![CDATA[stress]]></category>
+		<category><![CDATA[zoology]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=248589</guid>
+		<description><![CDATA[For the offspring, it's grow fast, die young.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/red_squirrel-640x434.jpg"><div class="caption" style="font-size:0.8em">
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://wdfw.wa.gov/conservation/gray_squirrel/">Washington State</a>
+				</div>
+	  </div>
+  </div>
+ <p>To give her offspring better odds in life, a mom can contribute all sorts of advantages: good genes, healthy milk, protection from predators, and more. Red squirrels—cousins of the more robust gray squirrels—are no exception. But new research in the journal <em>Science</em> shows that for these rodents, one such maternal boost stems from a surprising source: stress.</p>
+<p>The research was conducted by a group of scientists who have spent the last 22 years studying a group of wild red squirrels in the Yukon. The ecosystem there follows an episodic pattern: every few years, when the spruce trees produce seeds en masse, <a href="http://arstechnica.com/science/2006/12/6385/">the squirrel population booms</a> in response. The team’s previous research had shown that in the years when squirrel numbers are especially high, fast-growing offspring tend to fare better than those that grow more slowly, presumably since they are better equipped to outcompete their rivals.</p>
+<p>But how, exactly, do some squirrels end up growing so quickly?</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/stressed-out-moms-mean-faster-growing-babiesif-youre-a-squirrel/#p3">Read 9 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/stressed-out-moms-mean-faster-growing-babiesif-youre-a-squirrel/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=eRWOV8Z6Qw0:qOA7FjLQ3-E:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=eRWOV8Z6Qw0:qOA7FjLQ3-E:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=eRWOV8Z6Qw0:qOA7FjLQ3-E:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=eRWOV8Z6Qw0:qOA7FjLQ3-E:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=eRWOV8Z6Qw0:qOA7FjLQ3-E:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=eRWOV8Z6Qw0:qOA7FjLQ3-E:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/eRWOV8Z6Qw0" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/stressed-out-moms-mean-faster-growing-babiesif-youre-a-squirrel/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/stressed-out-moms-mean-faster-growing-babiesif-youre-a-squirrel/</feedburner:origLink></item>
+		<item>
+		<title>Kepler spots two super Earths, one squarely in the habitable zone</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/CmTcBzjd1Z8/</link>
+		<comments>http://arstechnica.com/science/2013/04/kepler-spots-two-super-earths-one-squarely-in-the-habitable-zone/#comments</comments>
+		<pubDate>Thu, 18 Apr 2013 18:30:15 +0000</pubDate>
+		<dc:creator>John Timmer</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[astronomy]]></category>
+		<category><![CDATA[exoplanets]]></category>
+		<category><![CDATA[habitable zone]]></category>
+		<category><![CDATA[kepler]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=248675</guid>
+		<description><![CDATA[Planets are about 1.5 times Earth's radius—and the right distance from a host star.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/lores-640x455.jpg"><div class="caption" style="font-size:0.8em">
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://www.cfa.harvard.edu/news/2013/pr201311.html">Harvard</a>
+				</div>
+	  </div>
+  </div>
+ <p>Liquid water is one of the essential ingredients of life on Earth and it has properties conducive to life in general, so researchers have defined the concept of a habitable zone with water as its focus. For astronomers, the habitable zone is the area far enough from a host star that a planet would be cool enough to support liquid water, but not so far that the water would be frozen. Although there are <a href="http://arstechnica.com/science/2013/02/the-ars-guide-to-exoplanets/">many caveats</a> to this definition—everything from the presence of greenhouse gasses to clouds will shift a planet's average surface temperature—the concept helps drive the search for a planet capable of supporting life.</p>
+<p>The caveats, however, have led to a number of arguments over whether a given exoplanet is likely able to host liquid water, with some candidates shifting in and out of the habitable zone more than once. Still, it's pretty clear that given the <a href="http://arstechnica.com/science/2012/12/possible-habitable-zone-planet-a-mere-12-light-years-away/">large</a> <a href="http://arstechnica.com/science/2011/12/kepler-planet-candidate-count-clears-2000-first-habitable-zone-candidate-confirmed/">number</a> of <a href="http://arstechnica.com/science/2013/01/15-potential-planets-in-habitable-zones-found-by-citizen-scientists/">reported</a> <a href="http://arstechnica.com/science/2012/11/old-data-reveals-super-earth-lurking-in-a-nearby-stars-habitable-zone/">candidate</a> <a href="http://arstechnica.com/science/2007/04/aheavy-earth-like-planet-found-in-the-habitable-zone-of-a-red-dwarf/">exoplanets</a>, the odds suggest we've already spotted one. Today, scientists are announcing an exosolar system that has two planets that are both likely to be within the habitable zone, along with three others that are closer to the host star.</p>
+<p>The findings come from the Kepler mission, which is dealing with a backlog of roughly 2,000 planet candidates to sort through and confirm. Normally, confirmation requires observing changes in the light emitted by the host star, which gets dragged closer to and further from the Earth as the planets circle it. However, this method requires that the planets either be large or orbiting close to the star so that their gravitational influence is big enough to shift it.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/kepler-spots-two-super-earths-one-squarely-in-the-habitable-zone/#p3">Read 7 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/kepler-spots-two-super-earths-one-squarely-in-the-habitable-zone/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=CmTcBzjd1Z8:7PyjiCACsZo:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=CmTcBzjd1Z8:7PyjiCACsZo:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=CmTcBzjd1Z8:7PyjiCACsZo:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=CmTcBzjd1Z8:7PyjiCACsZo:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=CmTcBzjd1Z8:7PyjiCACsZo:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=CmTcBzjd1Z8:7PyjiCACsZo:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/CmTcBzjd1Z8" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/kepler-spots-two-super-earths-one-squarely-in-the-habitable-zone/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/kepler-spots-two-super-earths-one-squarely-in-the-habitable-zone/</feedburner:origLink></item>
+		<item>
+		<title>Life is full of rude awakenings: all systems not go for Antares launch</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/fKSlkAe2kvI/</link>
+		<comments>http://arstechnica.com/science/2013/04/life-is-full-of-rude-awakenings-all-systems-not-go-for-antares-launch/#comments</comments>
+		<pubDate>Wed, 17 Apr 2013 22:25:18 +0000</pubDate>
+		<dc:creator>Matthew Francis</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[Antares rocket]]></category>
+		<category><![CDATA[Commercial space]]></category>
+		<category><![CDATA[NASA Wallops]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=248147</guid>
+		<description><![CDATA[Premature detachment of an umbilical cable on Antares rocket means 48-hour delay.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/Antares_on_pad.jpg"><div class="caption" style="font-size:0.8em">
+			<div class="caption-text">The Antares rocket on its launchpad at NASA Wallops.</div>
+	
+			<div class="caption-credit">
+							Matthew R. Francis				</div>
+	  </div>
+  </div>
+ <p>As your reporter on the scene at NASA's Wallops Flight Facility, I intended to file an account of the test launch of the Antares rocket today. However, as things happen, the launch was aborted at the T-minus twelve minute mark, when a cable connected to the rocket's second stage disconnected prematurely.</p>
+<p>Not only was this the first test of <a href="http://www.orbital.com/">Orbital Science's</a> Antares rocket, it was also to be the first launch from the new <a href="http://www.marsspaceport.com/">Mid-Atlantic Regional Spaceport (MARS)</a> launchpad at Wallops. As Orbital spokesman Barry Boneski said shortly after the decision to abort the launch, that means it's expected for things to go wrong. The disconnected cable, known as an umbilical, is a relatively minor problem, especially compared with some spectacularly failed tests of the past.</p>
+<p>Boneski declined to speculate why the cable disconnected before its proper time. As he noted, the wind speed at the launchpad reached 20 knots (23 miles per hour, or 27 kilometers per hour) at one point, which may have played a role. However, Orbital and NASA crews had not yet had time to investigate fully.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/life-is-full-of-rude-awakenings-all-systems-not-go-for-antares-launch/#p3">Read 1 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/life-is-full-of-rude-awakenings-all-systems-not-go-for-antares-launch/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=fKSlkAe2kvI:6E-rGokYtHw:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=fKSlkAe2kvI:6E-rGokYtHw:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=fKSlkAe2kvI:6E-rGokYtHw:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=fKSlkAe2kvI:6E-rGokYtHw:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=fKSlkAe2kvI:6E-rGokYtHw:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=fKSlkAe2kvI:6E-rGokYtHw:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/fKSlkAe2kvI" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/life-is-full-of-rude-awakenings-all-systems-not-go-for-antares-launch/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/life-is-full-of-rude-awakenings-all-systems-not-go-for-antares-launch/</feedburner:origLink></item>
+		<item>
+		<title>Join Ars in watching the first attempted Antares rocket launch, 5pm EDT</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/TpY5YTV1CUg/</link>
+		<comments>http://arstechnica.com/science/2013/04/join-ars-in-watching-the-first-attempted-antares-rocket-launch-5pm-edt/#comments</comments>
+		<pubDate>Wed, 17 Apr 2013 20:00:51 +0000</pubDate>
+		<dc:creator>John Timmer</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[antares]]></category>
+		<category><![CDATA[NASA]]></category>
+		<category><![CDATA[Orbital Science]]></category>
+		<category><![CDATA[rocketry]]></category>
+		<category><![CDATA[space]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=247853</guid>
+		<description><![CDATA[Ars is on the scene for future reports; for now, the livestream is here.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap"> <p>As we <a href="http://arstechnica.com/science/2013/04/nasas-wallops-flight-facility-hosts-test-of-new-commercial-rocket/">mentioned yesterday</a>, today will mark Orbital Science's first attempt to send its Antares rocket into space. Meant to provide an alternative route to deliver supplies to the International Space Station, the Antares is ready for liftoff at NASA's Wallops facility on the east coast of Virginia.</p>
+<p>Our own Matthew Francis is on hand to get pictures of the facility and liftoff attempt, but you can watch the events live on NASA TV. To save you the hassle of finding NASA TV, we've embedded the livestream below. Orbital Sciences has a lot of experience in the rocketry business, so we're crossing our fingers that its first liftoff with the new hardware will go off without a hitch.</p>
+<p><iframe style="border: 0px none transparent;" src="http://www.ustream.tv/embed/6540154?v=3&amp;wmode=direct" height="302" width="480" frameborder="0" scrolling="no"></iframe></p>
+</div><p><a href="http://arstechnica.com/science/2013/04/join-ars-in-watching-the-first-attempted-antares-rocket-launch-5pm-edt/#p3">Read 1 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/join-ars-in-watching-the-first-attempted-antares-rocket-launch-5pm-edt/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=TpY5YTV1CUg:0I7fIbU5hB4:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=TpY5YTV1CUg:0I7fIbU5hB4:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=TpY5YTV1CUg:0I7fIbU5hB4:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=TpY5YTV1CUg:0I7fIbU5hB4:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=TpY5YTV1CUg:0I7fIbU5hB4:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=TpY5YTV1CUg:0I7fIbU5hB4:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/TpY5YTV1CUg" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/join-ars-in-watching-the-first-attempted-antares-rocket-launch-5pm-edt/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/join-ars-in-watching-the-first-attempted-antares-rocket-launch-5pm-edt/</feedburner:origLink></item>
+		<item>
+		<title>Origin of life researchers figure out how to build bigger RNAs</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/Rp8HR3JnsAk/</link>
+		<comments>http://arstechnica.com/science/2013/04/origin-of-life-researchers-figure-out-how-to-build-bigger-rnas/#comments</comments>
+		<pubDate>Wed, 17 Apr 2013 18:00:15 +0000</pubDate>
+		<dc:creator>John Timmer</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[biochemistry]]></category>
+		<category><![CDATA[Biology]]></category>
+		<category><![CDATA[chemistry]]></category>
+		<category><![CDATA[origin of life]]></category>
+		<category><![CDATA[RNA]]></category>
+		<category><![CDATA[RNA world]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=247831</guid>
+		<description><![CDATA[Pre-biochemistry can link small building blocks into bigger molecules.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/groupI_intron_zoom-640x449.png"><div class="caption" style="font-size:0.8em">
+			<div class="caption-text">A close up of the active site of a catalytic RNA.</div>
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://web.chem.ucsb.edu/~molvisual/ribozymes.html">UCB</a>
+				</div>
+	  </div>
+  </div>
+ <p>We'll probably never know exactly how life on Earth got its start. The conditions in which it began have long since been lost, and there are simply too many precursor molecules and potential environments that could have gotten the process going. Nevertheless, researchers hope to put together a pathway that's at least plausible, starting from simple molecules that were present on the early Earth and building up to an enclosed system with basic inheritance (from there, evolution can take over).</p>
+<p>A lot of progress has been made in understanding how a simple chemical, like <a href="http://arstechnica.com/science/2012/10/simple-reaction-makes-the-building-blocks-of-a-nucleic-acid/">hydrogen cyanide</a>, can be <a href="http://arstechnica.com/science/2009/05/origin-of-life-building-an-rna-world-from-simple-chemicals/">built up</a> through a series of reactions into a nucleotide, the basic building block of molecules like DNA and RNA. And we've learned quite a bit about how larger RNAs (more than 100 nucleotides long) can fold into complex structures that can catalyze reactions and undergo the chemical equivalent of Darwinian evolution. The challenge has been bridging the gap between the two, going from a handful of linked nucleotides to a large molecule that's potentially capable of catalyzing chemical reactions.</p>
+<p>Now, the team that developed the earlier results is back with another publication. Their latest work shows how short molecules that are composed of just a handful of nucleotides can be linked together, eventually building longer, more complex chains. Once again, the chemistry is simple enough to occur on the early Earth, and the reaction might explain a curious bias in how DNA and RNA are built into long chains of nucleotides.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/origin-of-life-researchers-figure-out-how-to-build-bigger-rnas/#p3">Read 8 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/origin-of-life-researchers-figure-out-how-to-build-bigger-rnas/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Rp8HR3JnsAk:bFSI2-4KJes:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=Rp8HR3JnsAk:bFSI2-4KJes:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Rp8HR3JnsAk:bFSI2-4KJes:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=Rp8HR3JnsAk:bFSI2-4KJes:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Rp8HR3JnsAk:bFSI2-4KJes:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Rp8HR3JnsAk:bFSI2-4KJes:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/Rp8HR3JnsAk" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/origin-of-life-researchers-figure-out-how-to-build-bigger-rnas/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/origin-of-life-researchers-figure-out-how-to-build-bigger-rnas/</feedburner:origLink></item>
+		<item>
+		<title>Enzymes turn inedible waste plant material into food and fuel</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/7cIzKBjBCZg/</link>
+		<comments>http://arstechnica.com/science/2013/04/enzymes-turn-inedible-waste-plant-material-into-food-and-fuel/#comments</comments>
+		<pubDate>Wed, 17 Apr 2013 15:52:11 +0000</pubDate>
+		<dc:creator>WIRED UK</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[biofuels]]></category>
+		<category><![CDATA[cellulose]]></category>
+		<category><![CDATA[ethanol]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=247693</guid>
+		<description><![CDATA[From cellulose to glucose to complex starches.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/wheatfield-640x430.jpg"><div class="caption" style="font-size:0.8em">
+			<div class="caption-text">Sunrise over a wheat field.</div>
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://www.flickr.com/photos/theknowlesgallery/4898802278/sizes/l/in/photostream/">The Knowles Gallery</a>
+				</div>
+	  </div>
+  </div>
+ <p>Researchers have managed to <a href="http://www.vtnews.vt.edu/articles/2013/04/041613-cals-zhangstarch.html">turn indigestible cellulose into starch</a>, a process that could render billions of tons of agricultural waste into food and fuel.</p>
+<p>Plants grow more than 160 billion tons of cellulose—the material that makes up the walls of plant cells—every year, but only a tiny fraction of that is useful to humans in the crops we grow. This is frustrating, as cellulose is made up of glucose chains that are almost, but not quite, the same as those that make up the starch that constitutes 20 to 40 percent of most peoples' daily calorie intake.</p>
+<p>With the world's population <a href="http://www.un.org/esa/population/publications/longrange2/WorldPop2300final.pdf">forecast</a> to reach nine billion by 2050, working out how to alter cellulose glucose into something more practical could be vital for preventing starvation. There's also an extra benefit in that some could be used for biofuels.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/enzymes-turn-inedible-waste-plant-material-into-food-and-fuel/#p3">Read 8 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/enzymes-turn-inedible-waste-plant-material-into-food-and-fuel/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=7cIzKBjBCZg:wXuUxHirU7o:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=7cIzKBjBCZg:wXuUxHirU7o:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=7cIzKBjBCZg:wXuUxHirU7o:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=7cIzKBjBCZg:wXuUxHirU7o:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=7cIzKBjBCZg:wXuUxHirU7o:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=7cIzKBjBCZg:wXuUxHirU7o:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/7cIzKBjBCZg" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/enzymes-turn-inedible-waste-plant-material-into-food-and-fuel/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/enzymes-turn-inedible-waste-plant-material-into-food-and-fuel/</feedburner:origLink></item>
+		<item>
+		<title>Microsoft Excel: The ruiner of global economies?</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/f4V4lDXsTo4/</link>
+		<comments>http://arstechnica.com/tech-policy/2013/04/microsoft-excel-the-ruiner-of-global-economies/#comments</comments>
+		<pubDate>Tue, 16 Apr 2013 22:20:08 +0000</pubDate>
+		<dc:creator>Peter Bright</dc:creator>
+				<category><![CDATA[Law & Disorder]]></category>
+		<category><![CDATA[Scientific Method]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=247197</guid>
+		<description><![CDATA[A paper used to justify austerity economics appears to contain an Excel error.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/excel-destroys-earth-640x360.jpg"><div class="caption" style="font-size:0.8em">
+			<div class="caption-text">Figuratively speaking, of course.</div>
+	
+			<div class="caption-credit">
+							Aurich Lawson				</div>
+	  </div>
+  </div>
+ <p>An economics paper claiming that high levels of national debt led to low or negative economic growth could turn out to be deeply flawed as a result of, among other things, an incorrect formula in an Excel spreadsheet. Microsoft's PowerPoint has been <a href="http://www.wired.com/wired/archive/11.09/ppt2.html">considered evil</a> thanks to the proliferation of poorly presented data and dull slides that are created with it. Might Excel also deserve such hyperbolic censure?</p>
+<p>The paper, <a href="http://www.nber.org/papers/w15639.pdf">Growth in a Time of Debt</a>, was written by economists Carmen Reinhart and Kenneth Rogoff and published in 2010. Since publication, it has been cited <a href="http://www.reinhartandrogoff.com/related-research/growth-in-a-time-of-debt-featured-in">abundantly</a> by the world's press politicians, including one-time vice president nominee Paul Ryan (R-WI). The link it draws between high levels of debt and negative average economic growth has been used by right-leaning politicians to justify austerity budgets: slashing government expenditure and reducing budget deficits in a bid to curtail the growth of debt.</p>
+<p>This link was always controversial, with many economists proposing that the correlation between high debt and low growth was just as likely to have a causal link in the other direction to that proposed by Reinhart and Rogoff: it's not that high debt causes low growth, but rather that low growth leads to high debt.</p>
+</div><p><a href="http://arstechnica.com/tech-policy/2013/04/microsoft-excel-the-ruiner-of-global-economies/#p3">Read 10 remaining paragraphs</a> | <a href="http://arstechnica.com/tech-policy/2013/04/microsoft-excel-the-ruiner-of-global-economies/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=f4V4lDXsTo4:5KqO8QIKL5s:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=f4V4lDXsTo4:5KqO8QIKL5s:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=f4V4lDXsTo4:5KqO8QIKL5s:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=f4V4lDXsTo4:5KqO8QIKL5s:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=f4V4lDXsTo4:5KqO8QIKL5s:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=f4V4lDXsTo4:5KqO8QIKL5s:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/f4V4lDXsTo4" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/tech-policy/2013/04/microsoft-excel-the-ruiner-of-global-economies/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/tech-policy/2013/04/microsoft-excel-the-ruiner-of-global-economies/</feedburner:origLink></item>
+		<item>
+		<title>NASA’s Wallops Flight Facility hosts test of new commercial rocket</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/wCNxbCjC5Q8/</link>
+		<comments>http://arstechnica.com/science/2013/04/nasas-wallops-flight-facility-hosts-test-of-new-commercial-rocket/#comments</comments>
+		<pubDate>Tue, 16 Apr 2013 20:10:10 +0000</pubDate>
+		<dc:creator>Matthew Francis</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[Antares rocket]]></category>
+		<category><![CDATA[Commercial space]]></category>
+		<category><![CDATA[NASA]]></category>
+		<category><![CDATA[NASA Wallops]]></category>
+		<category><![CDATA[orbital sciences]]></category>
+		<category><![CDATA[rocket science]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=247013</guid>
+		<description><![CDATA[Antares rocket from Orbital Sciences could serve International Space Station.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/Antares2.jpg"><div class="caption" style="font-size:0.8em">
+			<div class="caption-text">The new Antares rocket will be test-launched from NASA Wallops this week.</div>
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://www.nasa.gov/exploration/commercial/cargo/orbitalsciences-index.html">NASA/Brea Reeves</a>
+				</div>
+	  </div>
+  </div>
+ <p>For decades, the Space Shuttles were the primary way the United States transported cargo and people into low-Earth orbit. Upon retirement of the aging fleet of Shuttles, NASA has promoted a public-private partnership with companies that are developing new rockets for transport into low-Earth orbit. One of these companies, <a href="http://www.orbital.com/">Orbital Sciences Corporation</a>, is test-launching a new rocket design at NASA's <a href="http://www.nasa.gov/centers/wallops/home/index.html">Wallops Flight Facility</a> in Virginia this week.</p>
+<p>Orbital's design, known as Antares, is a multi-purpose middleweight rocket built to carry non-human payloads into space. A major part of its intended purview is robotic delivery to the International Space Station (ISS), an important task for supplying long-duration stays. This week's launch from Wallops is the first orbital test of Antares.</p>
+<p>While NASA's Commercial Orbital Transportation Services (COTS) program for Station resupply only dates to 2006, Orbital has been developing rockets since 1990, beginning with the airplane-launched Pegasus. (For comparison, SpaceX was founded in 2002 and Virgin Galactic began operations in 2004.) Antares is based on Orbital's earlier designs, including the ground-launched Minotaur and Taurus rockets. However, the new design is much heftier, capable of carrying up to 6,120 kilograms (about 13,500 pounds), much higher than Minotaur's 1,730 kg maximum. According to the Orbital website, Antares is also capable of launching payloads on interplanetary trajectories.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/nasas-wallops-flight-facility-hosts-test-of-new-commercial-rocket/#p3">Read 4 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/nasas-wallops-flight-facility-hosts-test-of-new-commercial-rocket/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=wCNxbCjC5Q8:sMcSNGlZhXw:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=wCNxbCjC5Q8:sMcSNGlZhXw:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=wCNxbCjC5Q8:sMcSNGlZhXw:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=wCNxbCjC5Q8:sMcSNGlZhXw:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=wCNxbCjC5Q8:sMcSNGlZhXw:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=wCNxbCjC5Q8:sMcSNGlZhXw:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/wCNxbCjC5Q8" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/nasas-wallops-flight-facility-hosts-test-of-new-commercial-rocket/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/nasas-wallops-flight-facility-hosts-test-of-new-commercial-rocket/</feedburner:origLink></item>
+		<item>
+		<title>Latest dark matter search comes a bit short of discovery</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/yPVyWMogmo8/</link>
+		<comments>http://arstechnica.com/science/2013/04/latest-dark-matter-search-comes-a-bit-short-of-discovery/#comments</comments>
+		<pubDate>Tue, 16 Apr 2013 18:30:55 +0000</pubDate>
+		<dc:creator>John Timmer</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[Dark Matter]]></category>
+		<category><![CDATA[particle physics]]></category>
+		<category><![CDATA[Physics]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=246871</guid>
+		<description><![CDATA[But the particles it sees are lighter than expected.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/tamu_detector_updated.jpg"><div class="caption" style="font-size:0.8em">
+			<div class="caption-text">One of the detectors that will be used in the next iteration of this hunt for dark matter.</div>
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://www.science.tamu.edu/articles/1052">Texas A&amp;M</a>
+				</div>
+	  </div>
+  </div>
+ <p>The evidence for dark matter is comprehensive. We've measured its effect on galaxies and galaxy clusters, and we've seen its imprint in gravitational lenses and the cosmic microwave background. The annoying thing is that we still don't know <em>what it is.</em> All the evidence indicates that dark matter is likely to be a weakly interacting massive particle (or WIMP), but the best we've found when searching for this particle is a few intriguing hints of evidence.</p>
+<p>In the latest hint, the people behind a detector that sits deep in a Minnesota mine say they've observed three events that appear likely to be the faint impact of dark matter particles. Unfortunately, by every measure they try, the significance of these events falls short of discovery. We're therefore left waiting for better detectors and more data—just as we were the last time this team <a href="http://arstechnica.com/science/2009/12/two-events-hint-of-the-impact-of-dark-matter-particles/">announced a similar result</a>.</p>
+<p>Since the evidence indicates that dark matter is a particle (after all, it had to be around before there were even atoms in order to influence the cosmic microwave background), researchers have focused on three ways we might detect a particle that doesn't fit into the existing Standard Model. One track involves searches through the data in the LHC, looking for signs that some of the mass produced in a collision is being carried away by something we can't detect. So far, that hunt has come up blank.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/latest-dark-matter-search-comes-a-bit-short-of-discovery/#p3">Read 8 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/latest-dark-matter-search-comes-a-bit-short-of-discovery/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=yPVyWMogmo8:a20vWDiwoAY:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=yPVyWMogmo8:a20vWDiwoAY:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=yPVyWMogmo8:a20vWDiwoAY:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=yPVyWMogmo8:a20vWDiwoAY:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=yPVyWMogmo8:a20vWDiwoAY:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=yPVyWMogmo8:a20vWDiwoAY:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/yPVyWMogmo8" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/latest-dark-matter-search-comes-a-bit-short-of-discovery/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/latest-dark-matter-search-comes-a-bit-short-of-discovery/</feedburner:origLink></item>
+		<item>
+		<title>Is the Grand Canyon showing its age?</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/O4WOsv5fnJc/</link>
+		<comments>http://arstechnica.com/science/2013/04/is-the-grand-canyon-showing-its-age/#comments</comments>
+		<pubDate>Tue, 16 Apr 2013 15:00:35 +0000</pubDate>
+		<dc:creator>Ars Staff</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[Earth science]]></category>
+		<category><![CDATA[geology]]></category>
+		<category><![CDATA[grand canyon]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=246597</guid>
+		<description><![CDATA[Researchers argue over whether the Canyon is literally as old as the dinosaurs.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/20070921161701-640x422.jpg"><div class="caption" style="font-size:0.8em">
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://www.nps.gov/grca/photosmultimedia/GRAND-CANYON-SCENIC-SPLENDOR.htm">National Park Service</a>
+				</div>
+	  </div>
+  </div>
+ <p>It might be one of the best studied geologic features in the country, and it's certainly one of the most striking, but a scientific debate continues to rage over the Grand Canyon. Specifically over what's typically considered an impolite question: how old is it?</p>
+<p>Many geologists estimate that the Colorado River began to carve the canyon we see today between five and six million years ago. But in December, a paper published in <i>Science</i> presented evidence that the western portion of the canyon might have been carved close to the present depth by 70 million years ago.</p>
+<p>This week, <i>Science</i> hosts two comments challenging the ancient canyon proposal and a defense of the controversial paper from its authors. This is science in action—researchers debating a 65 million year conflict between evidence from traditional geological methods and new dating technology.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/is-the-grand-canyon-showing-its-age/#p3">Read 8 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/is-the-grand-canyon-showing-its-age/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=O4WOsv5fnJc:VSpFFzS5Fjk:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=O4WOsv5fnJc:VSpFFzS5Fjk:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=O4WOsv5fnJc:VSpFFzS5Fjk:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=O4WOsv5fnJc:VSpFFzS5Fjk:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=O4WOsv5fnJc:VSpFFzS5Fjk:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=O4WOsv5fnJc:VSpFFzS5Fjk:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/O4WOsv5fnJc" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/is-the-grand-canyon-showing-its-age/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/is-the-grand-canyon-showing-its-age/</feedburner:origLink></item>
+		<item>
+		<title>Supreme Court debates whether “snipping” human genes merits a patent</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/VcfzCOtCvXw/</link>
+		<comments>http://arstechnica.com/tech-policy/2013/04/supreme-court-debates-whether-snipping-human-genes-merits-a-patent/#comments</comments>
+		<pubDate>Mon, 15 Apr 2013 22:15:46 +0000</pubDate>
+		<dc:creator>Timothy B. Lee</dc:creator>
+				<category><![CDATA[Law & Disorder]]></category>
+		<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[American Civil Liberties Union]]></category>
+		<category><![CDATA[Myriad Genetics]]></category>
+		<category><![CDATA[patent law]]></category>
+		<category><![CDATA[Supreme Court]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=246247</guid>
+		<description><![CDATA[Some justices are skeptical of the "very patent happy" patent office.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/3210447964_eaf2399202_b-640x425.jpg"><div class="caption" style="font-size:0.8em">
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://www.flickr.com/photos/mikep1979/3210447964/sizes/l/in/photostream/">Mike Paradise</a>
+				</div>
+	  </div>
+  </div>
+ <p>The word of the day at the Supreme Court on Monday was "snip." The biotech company Myriad Genetics is defending <a href="http://arstechnica.com/tech-policy/2013/04/will-the-supreme-court-end-human-gene-patents-after-three-decades/">patents that give it exclusive control over two genes</a> linked to breast cancer. Critics have argued that Myriad merely "snipped" the genes from the human genome, and that this no more deserves patent protection than "snipping" a leaf from a plant or removing a liver from a human body.</p>
+<p>"Here, what's involved is snipping," Chief Justice John Roberts <a href="http://www.supremecourt.gov/oral_arguments/argument_transcripts/12-398-amc7.pdf">said</a> to Myriad's lawyer, Gregory Castanias. "You've got the thing there and you snip off the top and you snip off the bottom and there you've got it."</p>
+<p>"You wouldn't even know where to snip until the Myriad invention," Castanias countered.</p>
+</div><p><a href="http://arstechnica.com/tech-policy/2013/04/supreme-court-debates-whether-snipping-human-genes-merits-a-patent/#p3">Read 14 remaining paragraphs</a> | <a href="http://arstechnica.com/tech-policy/2013/04/supreme-court-debates-whether-snipping-human-genes-merits-a-patent/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=VcfzCOtCvXw:9cKxFvmGh1c:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=VcfzCOtCvXw:9cKxFvmGh1c:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=VcfzCOtCvXw:9cKxFvmGh1c:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=VcfzCOtCvXw:9cKxFvmGh1c:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=VcfzCOtCvXw:9cKxFvmGh1c:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=VcfzCOtCvXw:9cKxFvmGh1c:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/VcfzCOtCvXw" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/tech-policy/2013/04/supreme-court-debates-whether-snipping-human-genes-merits-a-patent/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/tech-policy/2013/04/supreme-court-debates-whether-snipping-human-genes-merits-a-patent/</feedburner:origLink></item>
+		<item>
+		<title>Making HIV tests visible to the naked eye</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/LQZUTAQcvz4/</link>
+		<comments>http://arstechnica.com/science/2013/04/making-hiv-tests-visible-to-the-naked-eye/#comments</comments>
+		<pubDate>Mon, 15 Apr 2013 12:54:12 +0000</pubDate>
+		<dc:creator>Chris Lee</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[biochemistry]]></category>
+		<category><![CDATA[Biology]]></category>
+		<category><![CDATA[chemistry]]></category>
+		<category><![CDATA[developing world]]></category>
+		<category><![CDATA[healthcare]]></category>
+		<category><![CDATA[HIV]]></category>
+		<category><![CDATA[medicine]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=244705</guid>
+		<description><![CDATA[Pregnancy-test-style diagnosis gives the blue stripe a whole new meaning.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/pregnancy_test_positive.jpg"><div class="caption" style="font-size:0.8em">
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://www.personal.psu.edu/afr3/blogs/siowfa12/2012/12/pregnancy-tests.html">Penn State</a>
+				</div>
+	  </div>
+  </div>
+ <p>One of the recurring themes in healthcare is that a lot of what works in the developed world doesn't work in the developing world. There may be limited access to basics like power or communications facilities, never mind the medical technologies that make a hospital one of the modern wonders of the world. Beyond simple access to expensive technologies and medicines, even something as basic as a diagnostic test might be too expensive or require skilled technicians to use.</p>
+<p>Though cures might remain expensive—drug companies like their profits—every dime saved on diagnosis is a dime more for prevention and cure. That makes cheap, accurate, and simple diagnostic tests very, very desirable.</p>
+<p>I was thinking about this when I came across an older paper that somehow didn't attract any attention when it came out. Last year, a group of researchers <a href="http://dx.doi.org/10.1038/nnano.2012.18">showed</a> that they could detect HIV at extremely low concentrations. That by itself is nothing special: people are always improving diagnostic tests. What is special is that the test is very much like a pregnancy test, in that a simple visible color change indicates a positive result. Even better, it seems to work in real-life tests.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/making-hiv-tests-visible-to-the-naked-eye/#p3">Read 11 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/making-hiv-tests-visible-to-the-naked-eye/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=LQZUTAQcvz4:Yu1dzk3Ur78:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=LQZUTAQcvz4:Yu1dzk3Ur78:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=LQZUTAQcvz4:Yu1dzk3Ur78:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=LQZUTAQcvz4:Yu1dzk3Ur78:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=LQZUTAQcvz4:Yu1dzk3Ur78:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=LQZUTAQcvz4:Yu1dzk3Ur78:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/LQZUTAQcvz4" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/making-hiv-tests-visible-to-the-naked-eye/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/making-hiv-tests-visible-to-the-naked-eye/</feedburner:origLink></item>
+		<item>
+		<title>New F-1B rocket engine upgrades Apollo-era design with 1.8M lbs of thrust</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/ftrk7zc61xk/</link>
+		<comments>http://arstechnica.com/science/2013/04/new-f-1b-rocket-engine-upgrades-apollo-era-deisgn-with-1-8m-lbs-of-thrust/#comments</comments>
+		<pubDate>Mon, 15 Apr 2013 01:00:30 +0000</pubDate>
+		<dc:creator>Lee Hutchinson</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[dynetics]]></category>
+		<category><![CDATA[f-1]]></category>
+		<category><![CDATA[F-1B]]></category>
+		<category><![CDATA[NASA]]></category>
+		<category><![CDATA[pratt whitney rocketdyne]]></category>
+		<category><![CDATA[pwr]]></category>
+		<category><![CDATA[rocketdybe]]></category>
+		<category><![CDATA[rockets]]></category>
+		<category><![CDATA[sls]]></category>
+		<category><![CDATA[space]]></category>
+		<category><![CDATA[space flight]]></category>
+		<category><![CDATA[space launch system]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=243439</guid>
+		<description><![CDATA[Dynetics and Pratt Whitney Rocketdyne rebuild the F-1 for the "Pyrios" booster.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap"> <p>NASA has spent a lot of time and money <a href="http://arstechnica.com/science/2013/01/saturn-v-moon-rocket-engine-firing-again-after-40-years-sort-of/">resurrecting the F-1 rocket engine</a> that powered the Saturn V back in the 1960s and 1970s, and Ars recently spent a week at the Marshall Space Flight Center in Huntsville, Alabama, to get <a href="http://arstechnica.com/science/2013/04/how-nasa-brought-the-monstrous-f-1-moon-rocket-back-to-life/">the inside scoop on how the effort came to be</a>. But there's a very practical reason why NASA is putting old rocket parts up on a test stand and firing them off: its latest launch vehicle might be powered by engines that look, sound, and work a whole lot like the legendary F-1.</p>
+<p>This new launch vehicle, known as the <a href="https://en.wikipedia.org/wiki/Space_Launch_System">Space Launch System</a>, or SLS, is currently taking shape on NASA drawing boards. However, as is its mandate, NASA won't be <em>building</em> the rocket itself—it will allow private industry to bid for the rights to build various components. One potential design wrinkle in SLS is that instead of using Space Shuttle-style solid rocket boosters, SLS could instead use liquid-fueled rocket motors, which would make it the United States' first human-rated rocket in more than 30 years not to use solid-fuel boosters.</p>
+<p>The contest to suss this out is the <a href="http://www.nasaspaceflight.com/2012/11/dynetics-pwr-liquidize-sls-booster-competition-f-1-power/">Advanced Booster Competition</a>, and one of the companies that has been down-selected as a final competitor is Huntsville-based <a href="http://www.dynetics.com">Dynetics</a>. Dynetics has partnered with Pratt Whitney Rocketdyne (designers of the Saturn V's F-1 engine, among others) to propose a liquid-fueled booster featuring an engine based heavily on the design of the famous F-1. The booster is tentatively named <em>Pyrios</em>, after one of the fiery horses that pulled the god Apollo's chariot; the engine is being called the F-1B.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/new-f-1b-rocket-engine-upgrades-apollo-era-deisgn-with-1-8m-lbs-of-thrust/#p3">Read 34 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/new-f-1b-rocket-engine-upgrades-apollo-era-deisgn-with-1-8m-lbs-of-thrust/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=ftrk7zc61xk:5ORR3r677Os:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=ftrk7zc61xk:5ORR3r677Os:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=ftrk7zc61xk:5ORR3r677Os:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=ftrk7zc61xk:5ORR3r677Os:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=ftrk7zc61xk:5ORR3r677Os:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=ftrk7zc61xk:5ORR3r677Os:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/ftrk7zc61xk" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/new-f-1b-rocket-engine-upgrades-apollo-era-deisgn-with-1-8m-lbs-of-thrust/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/new-f-1b-rocket-engine-upgrades-apollo-era-deisgn-with-1-8m-lbs-of-thrust/</feedburner:origLink></item>
+		<item>
+		<title>Gallery: Behind the scenes at NASA’s Marshall Space Flight Center</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/IdBEioMsgeE/</link>
+		<comments>http://arstechnica.com/science/2013/04/gallery-behind-the-scenes-at-nasas-marshall-space-flight-center/#comments</comments>
+		<pubDate>Mon, 15 Apr 2013 01:00:29 +0000</pubDate>
+		<dc:creator>Lee Hutchinson</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[f-1]]></category>
+		<category><![CDATA[F-1B]]></category>
+		<category><![CDATA[gallery]]></category>
+		<category><![CDATA[huntsville]]></category>
+		<category><![CDATA[marshall space flight center]]></category>
+		<category><![CDATA[msfc]]></category>
+		<category><![CDATA[NASA]]></category>
+		<category><![CDATA[rocketry]]></category>
+		<category><![CDATA[Saturn V]]></category>
+		<category><![CDATA[space]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=244771</guid>
+		<description><![CDATA[We watched a rocket test and came away with a ton of awesome photographs.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap"> <p>Ars spent the better part of a week at NASA's Marshall Space Flight Center (MSFC) in Huntsville, Alabama, gathering material for our pieces on the Saturn V's F-1 <a href="http://arstechnica.com/science/2013/04/how-nasa-brought-the-monstrous-f-1-moon-rocket-back-to-life/">resurrection and testing</a> and the <a href="http://arstechnica.com/science/2013/04/new-f-1b-rocket-engine-upgrades-apollo-era-deisgn-with-1-8m-lbs-of-thrust/">new F-1B</a> rocket engine that's being developed right now. In the process, we got to peek into a number of different areas of MSFC not open to the general public, including manufacturing, training, and operations areas. I took over a thousand photographs over the time I was there, and couldn't resist showing them off. Below are the 40 best images from our tour of Marshall, the birthplace of the Saturn V rocket and the place where NASA's <a href="https://en.wikipedia.org/wiki/Space_Launch_System">latest launch vehicle</a> is being designed.</p>
+  <div class="gallery">
+    <div class="gallery-main-image" style="width:auto">
+      <div class="gallery-image-container" style="height:auto">
+        <div class="gallery-image-wrap">
+        <a class="enlarge" href="http://cdn.arstechnica.net/wp-content/uploads/2013/04/eande-ss-f1-moonrise.jpg" data-width="2048" data-height="1365">
+          <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/eande-ss-f1-moonrise-980x653.jpg" style="max-width:auto;max-height:auto"></a>
+        </div>
+      </div>
+    </div>
+
+        <div class="gallery-image-description">
+
+            <h2>F-1 moonrise</h2>
+                <p>A late-afternoon moon peeking over the edge of the engine interface panel on one of Marshall Space Flight Center's outdoor F-1 rockets. </p>
+      
+          <p class="gallery-image-credit">
+              <em>Lee Hutchinson</em>
+            </p>
+    
+    </div>
+    
+       
+          <p><strong>40 more images in gallery</strong></p>
+      </div>
+    <style type="text/css"> .related-stories { display: none !important; } </style>
+</div><p><a href="http://arstechnica.com/science/2013/04/gallery-behind-the-scenes-at-nasas-marshall-space-flight-center/">Read on Ars Technica</a> | <a href="http://arstechnica.com/science/2013/04/gallery-behind-the-scenes-at-nasas-marshall-space-flight-center/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=IdBEioMsgeE:eo0nYce5DmY:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=IdBEioMsgeE:eo0nYce5DmY:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=IdBEioMsgeE:eo0nYce5DmY:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=IdBEioMsgeE:eo0nYce5DmY:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=IdBEioMsgeE:eo0nYce5DmY:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=IdBEioMsgeE:eo0nYce5DmY:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/IdBEioMsgeE" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/gallery-behind-the-scenes-at-nasas-marshall-space-flight-center/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/gallery-behind-the-scenes-at-nasas-marshall-space-flight-center/</feedburner:origLink></item>
+		<item>
+		<title>How NASA brought the monstrous F-1 “moon rocket” engine back to life</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/Ij4-OtGe614/</link>
+		<comments>http://arstechnica.com/science/2013/04/how-nasa-brought-the-monstrous-f-1-moon-rocket-back-to-life/#comments</comments>
+		<pubDate>Mon, 15 Apr 2013 01:00:03 +0000</pubDate>
+		<dc:creator>Lee Hutchinson</dc:creator>
+				<category><![CDATA[Features]]></category>
+		<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[booster]]></category>
+		<category><![CDATA[f-1]]></category>
+		<category><![CDATA[F-1B]]></category>
+		<category><![CDATA[kerosene]]></category>
+		<category><![CDATA[marshall space flight center]]></category>
+		<category><![CDATA[msfc]]></category>
+		<category><![CDATA[NASA]]></category>
+		<category><![CDATA[pratt and whitney]]></category>
+		<category><![CDATA[rocket]]></category>
+		<category><![CDATA[rocket engine]]></category>
+		<category><![CDATA[rocketdyne]]></category>
+		<category><![CDATA[Saturn V]]></category>
+		<category><![CDATA[space]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=221211</guid>
+		<description><![CDATA[The story of young engineers who resurrected an engine nearly twice their age.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap"> <p>There has never been anything like the <a href="https://en.wikipedia.org/wiki/Saturn_V">Saturn V</a>, the launch vehicle that powered the United States past the Soviet Union to a series of manned lunar landings in the late 1960s and early 1970s. The rocket redefined "massive," standing 363 feet (110 meters) in height and producing a ludicrous 7.68 million pounds (34 meganewtons) of thrust from the five monstrous, kerosene-gulping <a href="https://en.wikipedia.org/wiki/F-1_%28rocket_engine%29">Rocketdyne F-1</a> rocket engines that made up its first stage.</p>
+<p>At the time, the F-1 was the largest and most powerful liquid-fueled engine ever constructed; even today, its design remains unmatched (though see the sidebar, "The Soviets," for more information on engines that have rivaled the F-1). The power generated by five of these engines was best conceptualized by author David Woods in his book <em><a href="http://books.google.com/books?id=x-taL4N0sjIC&amp;lpg=PP1&amp;pg=PA79#v=onepage&amp;q&amp;f=false">How Apollo Flew to the Moon</a>—</em>"[T]he power output of the Saturn first stage was 60 gigawatts. This happens to be very similar to the peak electricity demand of the United Kingdom."</p>
+<p>Despite the stunning success of the Saturn V, NASA's direction shifted after Project Apollo's conclusion; the <a href="http://arstechnica.com/science/2011/07/30-years-of-manned-space-flight-the-last-flight-of-the-space-shuttle/">Space Transport System</a>—the Space Shuttle and its associated hardware—was instead designed with wildly different engines. For thirty years, NASA's astronaut corps rode into orbit aboard Space Shuttles powered by <a href="https://en.wikipedia.org/wiki/RS-25">RS-25</a> liquid hydrogen-powered engines and <a href="https://en.wikipedia.org/wiki/Space_Shuttle_Solid_Rocket_Booster">solid-propellant boosters</a>. With the Shuttle's discontinuation, NASA is currently hitching space rides with the Russians.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/how-nasa-brought-the-monstrous-f-1-moon-rocket-back-to-life/#p3">Read 64 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/how-nasa-brought-the-monstrous-f-1-moon-rocket-back-to-life/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Ij4-OtGe614:LDXOJCO_W1c:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=Ij4-OtGe614:LDXOJCO_W1c:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Ij4-OtGe614:LDXOJCO_W1c:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=Ij4-OtGe614:LDXOJCO_W1c:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Ij4-OtGe614:LDXOJCO_W1c:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=Ij4-OtGe614:LDXOJCO_W1c:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/Ij4-OtGe614" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/how-nasa-brought-the-monstrous-f-1-moon-rocket-back-to-life/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/how-nasa-brought-the-monstrous-f-1-moon-rocket-back-to-life/</feedburner:origLink></item>
+		<item>
+		<title>Will the Supreme Court end human gene patents after three decades?</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/GxiUegKxh7M/</link>
+		<comments>http://arstechnica.com/tech-policy/2013/04/will-the-supreme-court-end-human-gene-patents-after-three-decades/#comments</comments>
+		<pubDate>Sun, 14 Apr 2013 20:00:29 +0000</pubDate>
+		<dc:creator>Timothy B. Lee</dc:creator>
+				<category><![CDATA[Law & Disorder]]></category>
+		<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[Gene patents]]></category>
+		<category><![CDATA[Myriad Genetics]]></category>
+		<category><![CDATA[patent]]></category>
+		<category><![CDATA[Supreme Court]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=244687</guid>
+		<description><![CDATA[Court considers invalidating breast cancer gene patents&#8212;and thousands of others.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/51784073_941f42961b_b-640x512.jpg"><div class="caption" style="font-size:0.8em">
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://www.flickr.com/photos/memestate/51784073/">Rich Anderson</a>
+				</div>
+	  </div>
+  </div>
+ <p>Since the 1980s, patent lawyers have been claiming pieces of humanity's genetic code. The United States Patent and Trademark Office has granted thousands of gene patents. The Federal Circuit, the court that hears all patent appeals, has consistently ruled such patents are legal.</p>
+<p>But the judicial winds have been shifting. The Supreme Court has never ruled on the legality of gene patents. And recently, the Supreme Court has grown increasingly skeptical of the Federal Circuit's <a href="http://arstechnica.com/tech-policy/2012/09/how-a-rogue-appeals-court-wrecked-the-patent-system/">patent-friendly jurisprudence.</a></p>
+<p>Meanwhile, a growing number of researchers, health care providers, and public interest groups have raised concerns about the harms of gene patents. The American Civil Liberties Union <a href="http://www.aclu.org/blog/free-speech-technology-and-liberty-womens-rights/voices-human-gene-patents-its-time-free-our">estimates</a> that more than 40 percent of genes are now patented. Those patents have created "patent thickets" that make it difficult for scientists to do genetic research and commercialize their results. Monopolies on genetic testing have raised prices and reduced patient options.</p>
+</div><p><a href="http://arstechnica.com/tech-policy/2013/04/will-the-supreme-court-end-human-gene-patents-after-three-decades/#p3">Read 14 remaining paragraphs</a> | <a href="http://arstechnica.com/tech-policy/2013/04/will-the-supreme-court-end-human-gene-patents-after-three-decades/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=GxiUegKxh7M:GLxQ8u7wM40:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=GxiUegKxh7M:GLxQ8u7wM40:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=GxiUegKxh7M:GLxQ8u7wM40:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=GxiUegKxh7M:GLxQ8u7wM40:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=GxiUegKxh7M:GLxQ8u7wM40:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=GxiUegKxh7M:GLxQ8u7wM40:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/GxiUegKxh7M" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/tech-policy/2013/04/will-the-supreme-court-end-human-gene-patents-after-three-decades/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/tech-policy/2013/04/will-the-supreme-court-end-human-gene-patents-after-three-decades/</feedburner:origLink></item>
+		<item>
+		<title>This AI “solves” Super Mario Bros. and other classic NES games</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/eP42pLcuB8U/</link>
+		<comments>http://arstechnica.com/gaming/2013/04/this-ai-solves-super-mario-bros-and-other-classic-nes-games/#comments</comments>
+		<pubDate>Sun, 14 Apr 2013 19:00:13 +0000</pubDate>
+		<dc:creator>WIRED UK</dc:creator>
+				<category><![CDATA[Opposable Thumbs]]></category>
+		<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[AI]]></category>
+		<category><![CDATA[Super Mario Bros.]]></category>
+		<category><![CDATA[super nes]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=245545</guid>
+		<description><![CDATA[Program even takes advantage of bugs and glitches.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/snes-640x476.png"><div class="caption" style="font-size:0.8em">
+	
+			<div class="caption-credit">
+							Nintendo				</div>
+	  </div>
+  </div>
+ <p><figure class="video" style="width:640px"><iframe style="display:block" type="text/html" width="640" height="360" src="http://www.youtube-nocookie.com/embed/xOCurBYI_gY?start=0&amp;wmode=transparent" frameborder="0"></iframe></figure><br>
+In the 28 years since <i>Super Mario Bros.</i> was released, and it's obviously been comprehensively beaten, thoroughly, many thousands of times in that time by players around the world. But have you ever made the game beat itself?</p>
+<p>That's what computer scientist Tom Murphy has done. At <a href="http://sigbovik.org/">SigBovik 2013</a>, he presented a program that "solves" how to play <i>Super Mario Bros</i>., or any other NES game, like it's just another kind of mathematical problem. And for those who know that SigBovik is an annual computer science conference dedicated to spoof research, hosted on April 1 every year, Murphy stresses that this is "100 percent real."</p>
+<p>He outlines his method in a paper, "<a href="http://www.cs.cmu.edu/~tom7/mario/mario.pdf">The First Level of <i>Super Mario Bros.</i> is Easy with Lexicographic Orderings and Time Travel... after that it gets a little tricky</a>," but he also presented the results in the video you can see with this story.</p>
+</div><p><a href="http://arstechnica.com/gaming/2013/04/this-ai-solves-super-mario-bros-and-other-classic-nes-games/#p3">Read 11 remaining paragraphs</a> | <a href="http://arstechnica.com/gaming/2013/04/this-ai-solves-super-mario-bros-and-other-classic-nes-games/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=eP42pLcuB8U:JPNHxrFqAis:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=eP42pLcuB8U:JPNHxrFqAis:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=eP42pLcuB8U:JPNHxrFqAis:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=eP42pLcuB8U:JPNHxrFqAis:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=eP42pLcuB8U:JPNHxrFqAis:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=eP42pLcuB8U:JPNHxrFqAis:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/eP42pLcuB8U" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/gaming/2013/04/this-ai-solves-super-mario-bros-and-other-classic-nes-games/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/gaming/2013/04/this-ai-solves-super-mario-bros-and-other-classic-nes-games/</feedburner:origLink></item>
+		<item>
+		<title>Weird Science retracts its penis to keep everyone guessing</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/8jSlZ98435s/</link>
+		<comments>http://arstechnica.com/science/2013/04/weird-science-retracts-its-penis-to-keep-everyone-guessing/#comments</comments>
+		<pubDate>Sat, 13 Apr 2013 20:30:21 +0000</pubDate>
+		<dc:creator>John Timmer</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[Week in review]]></category>
+		<category><![CDATA[Weird Science]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=245907</guid>
+		<description><![CDATA[And, scientific achievement goes hand-in-hand with beer consumption. <em>Duh.</em>]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/4129761544_b4cec35a55_z.jpg"><div class="caption" style="font-size:0.8em">
+	
+			<div class="caption-credit">
+							<a rel="nofollow" href="http://www.flickr.com/photos/photographicpictures/4129761544/">Chris Cotterman</a>
+				</div>
+	  </div>
+  </div>
+ <p><strong>Ever wonder about the consequences of your penis not being retractable?</strong> Wonder no more. Fortunately, a team of Australian researchers are <a href="http://www.pnas.org/content/early/2013/04/03/1219361110">willing to lay it out for us</a>: "Before clothing, the nonretractable human penis would have been conspicuous to potential mates." Since clothing is a relatively recent development, there's a chance that its conspicuousness made a mark on human evolution, either in terms of male anatomy or in terms of female tastes. The authors grabbed a database from a study of the Italian male population and used it to make computer-generated male bodies. They showed them to a mixture of university students, campus staff, and random volunteers they recruited.</p>
+<p>And, at least on some level, the results indicate that women do like a larger penis. But the effect tails off quickly once the penis passes a given length, with the critical measurement being influenced by body height (the taller the person, the bigger the penis had to be). Complicating matters, women liked tall men, as well—it had just as strong an effect as penis size. So, that helped drag the preferred penis size to even greater lengths than it would have been otherwise.</p>
+<p><strong>If you're emotionally attached to a Web service, using pot may be one of the least of your problems.</strong> A survey was used to check which of four factors was associated with college students growing emotionally attached to using Facebook. It came up with a simple answer: <a href="http://www.sciencedirect.com/science/article/pii/S0747563212003317">all of them</a>. Loneliness, anxiousness, alcohol, and marijuana use were all associated with getting attached to using the service, while loneliness and anxiousness were associated with establishing a lot of connections on it. Elsewhere in the same journal, we have a demonstration that <a href="http://www.sciencedirect.com/science/article/pii/S0747563211000379">Facebook users are narcissistic</a>. But they're also more extroverted and less lonely than non-users.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/weird-science-retracts-its-penis-to-keep-everyone-guessing/#p3">Read 4 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/weird-science-retracts-its-penis-to-keep-everyone-guessing/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=8jSlZ98435s:VBYLCdQZE3s:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=8jSlZ98435s:VBYLCdQZE3s:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=8jSlZ98435s:VBYLCdQZE3s:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=8jSlZ98435s:VBYLCdQZE3s:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=8jSlZ98435s:VBYLCdQZE3s:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=8jSlZ98435s:VBYLCdQZE3s:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/8jSlZ98435s" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/weird-science-retracts-its-penis-to-keep-everyone-guessing/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/weird-science-retracts-its-penis-to-keep-everyone-guessing/</feedburner:origLink></item>
+		<item>
+		<title>Robotics forecast: cool with a chance of lost humanity</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/zsfBe5zBuWg/</link>
+		<comments>http://arstechnica.com/science/2013/04/robotics-forecast-cool-with-a-chance-of-lost-humanity/#comments</comments>
+		<pubDate>Sat, 13 Apr 2013 16:10:44 +0000</pubDate>
+		<dc:creator>Scott K. Johnson</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[Artificial Intelligence]]></category>
+		<category><![CDATA[book review]]></category>
+		<category><![CDATA[Robotics]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=243927</guid>
+		<description><![CDATA[<i>Robot Futures</i> examines societal implications of revolutions in tech.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/robotfutures-640x938.jpg">
+</div>
+ <p>You might expect a book titled <i>Robot Futures</i> and written by a robotics researcher to be a whiz-bang prophecy of technologies that are the best thing since sliced bread. Soon we’ll be living to 200 while traveling from vacation to vacation in our flying cars. All the while, robots handle all the parts of our jobs that we hated anyway, right? Maybe, but this book isn't the place to find it. There’s plenty of speculation in it (I mean, we <i>are</i> talking about the future here) but it’s decidedly more pragmatic and sober than that.</p>
+<p>The book’s author, <a href="http://www.cs.cmu.edu/~illah/">Illah Nourbakhsh</a>, runs Carnegie Mellon's Community Robotics, Education, and Technology Empowerment (<a href="http://www.cmucreatelab.org/">CREATE</a>) Lab, which “explores socially meaningful innovation and deployment of robotic technologies.” (He’s also one of the developers of the GigaPan imaging tools we <a href="http://arstechnica.com/science/2012/11/gigapans-gigapixel-images-bring-field-trips-to-geology-classrooms/">highlighted recently</a>.) The book, accompanied by Nourbakhsh’s <a href="http://www.robotfutures.org/">blog</a> of the same name, focuses on what he calls the “human side effects” of future technologies—the unexpected ways they could affect us socially and as a society.</p>
+<p>Each chapter of the book—which progresses from the likely-seeming near future to an increasingly speculative and distant one— begins with a short, fictional story to illustrate the types of issues that could accompany a given technology. The rest of the chapter then beaks down those issues.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/robotics-forecast-cool-with-a-chance-of-lost-humanity/#p3">Read 10 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/robotics-forecast-cool-with-a-chance-of-lost-humanity/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=zsfBe5zBuWg:E5AdQk0zC1A:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=zsfBe5zBuWg:E5AdQk0zC1A:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=zsfBe5zBuWg:E5AdQk0zC1A:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=zsfBe5zBuWg:E5AdQk0zC1A:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=zsfBe5zBuWg:E5AdQk0zC1A:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=zsfBe5zBuWg:E5AdQk0zC1A:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/zsfBe5zBuWg" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/robotics-forecast-cool-with-a-chance-of-lost-humanity/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/robotics-forecast-cool-with-a-chance-of-lost-humanity/</feedburner:origLink></item>
+		<item>
+		<title>Diluting the scientific method: Ars looks at homeopathy (again)</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/zepdurVTUJw/</link>
+		<comments>http://arstechnica.com/science/2013/04/the-pseudoscience-behind-homeopathy/#comments</comments>
+		<pubDate>Sat, 13 Apr 2013 12:15:00 +0000</pubDate>
+		<dc:creator>John Timmer</dc:creator>
+				<category><![CDATA[Features]]></category>
+		<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[homeopathy]]></category>
+		<category><![CDATA[Pseudoscience]]></category>
+		<category><![CDATA[science]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/science/2007/09/the-pseudoscience-behind-homeopathy/</guid>
+		<description><![CDATA[In honor of World Homeopathy Week, we discuss why it shouldn't be celebrated.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap">
+<div>
+      <img src="http://cdn.arstechnica.net/wp-content/uploads/2013/04/recursive-water.jpg"><div class="caption" style="font-size:0.8em">
+	
+			<div class="caption-credit">
+							Aurich Lawson				</div>
+	  </div>
+  </div>
+ <p><em><p>Over the past couple of weeks, Ars has started receiving e-mails about a topic that doesn't really fit into our normal areas of coverage: homeopathy. The belief that the administration of nothing more than water can have a medicinal affect certainly isn't technology, and it only peripherally touches upon science, in the sense that any health benefits it provides seem to involve the placebo affect.</p>
+
+<p>Nevertheless, many of the practitioners of homeopathy have tried to claim the mantle of science, creating scientific-sounding explanations for "water memory"—the idea that a substance can actually gain potency as it is diluted out of existence. These practitioners even formed a peer-reviewed journal to discuss their findings. Six years ago, the journal <em>Homeopathy</em> ran a special issue on these explanations, and the Ars writers teamed up to tackle the bizarre distortions of science that it contained.</p>
+
+<p>So in honor of World Homeopathy Week (which we just received a press release for), we're going to run an updated version of that story. Not because we think there's a value in talking about homeopathy. Rather, by scientifically evaluating homeopathy's attempts to sound scientific and revealing it to be nothing more than "pseudoscience," we think it's possible to learn something about the scientific process and the reasoning that drives it. In turn, we can possibly learn to recognize other areas where scientific reasoning has ended up on the rocks.</p>
+
+<p>This feature was originally published on September 11, 2007.</p></em></p>
+<h2>Welcome to Waterworld</h2>
+<p><span style="font-size: 14px; line-height: 19px;">Science can be a tricky thing to define, and it's sometimes easier to contrast it with some of the arguments that pose as science. Unfortunately, most of those issues are entangled with implications that keep the basic question—is this science?—obscured by emotional responses. Thus, the science of climatology has become entwined with political, economic, and policy issues. The science of evolution conflicts with the political and religious goals of some individuals. Even basic scientific questions about the nervous system get embroiled in family and personal health issues when topics like autism and radio frequency radiation are broached.</span></p>
+<p>That's why a special edition of the journal <em>Homeopathy</em> appears to be a gift, allowing us to look at science and pseudoscience without getting entangled with politics and religion. Homeopathy claims to be a form of medical practice that's based on the principle that "like cures like." Given a set of symptoms, a homeopath will identify an herb or chemical that causes similar symptoms. Following a predefined ritual, the homeopath performs a series of dilutions of that chemical that continue well beyond the point where there should be no molecules of it left—the final solution is essentially well-shaken water.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/the-pseudoscience-behind-homeopathy/#p3">Read 75 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/the-pseudoscience-behind-homeopathy/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=zepdurVTUJw:v1Of4Y5Tm2g:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=zepdurVTUJw:v1Of4Y5Tm2g:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=zepdurVTUJw:v1Of4Y5Tm2g:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=zepdurVTUJw:v1Of4Y5Tm2g:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=zepdurVTUJw:v1Of4Y5Tm2g:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=zepdurVTUJw:v1Of4Y5Tm2g:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/zepdurVTUJw" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/the-pseudoscience-behind-homeopathy/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/the-pseudoscience-behind-homeopathy/</feedburner:origLink></item>
+		<item>
+		<title>Want to name an exoplanet after your cat? IAU says dream on</title>
+		<link>http://feeds.arstechnica.com/~r/arstechnica/science/~3/DwW5NDqXFy8/</link>
+		<comments>http://arstechnica.com/science/2013/04/want-to-name-an-exoplanet-after-your-cat-iau-says-dream-on/#comments</comments>
+		<pubDate>Fri, 12 Apr 2013 19:12:09 +0000</pubDate>
+		<dc:creator>John Timmer</dc:creator>
+				<category><![CDATA[Scientific Method]]></category>
+		<category><![CDATA[astronomy]]></category>
+		<category><![CDATA[exoplanets]]></category>
+
+		<guid isPermaLink="false">http://arstechnica.com/?p=245103</guid>
+		<description><![CDATA[Astronomy organization says paying to name exoplanets won't get you anything.]]></description>
+				<content:encoded><![CDATA[<div id="rss-wrap"> <p>It has been incredibly exciting to bring you the latest news on the hunt for planets outside our Solar System. Over the past few years, the planets we've spotted have gotten closer to Earth's size, closer to the Solar System, and far, far more numerous. There's almost nothing that could dull the excitement—except, perhaps, the planets' names. Monikers like KOI-135 b and HAT-P-5 b don't exactly inspire a sense of the mysterious unknown.</p>
+<p>Even the International Astronomical Union (IAU) admits they're a bit dull. "While exoplanet names such as 16 Cygni Bb or HD 41004 Ab may seem boring when considering the names of planets in our own Solar System, the vast number of objects in our Universe—galaxies, stars, and planets to name just a few—means that a clear and systematic system for naming these objects is vital," the organization has noted. But at least one company has decided that clear and systematic is not its thing, and it has started selling the chance to name a planet.</p>
+<p>Or rather <a href="http://science.time.com/2013/03/07/name-your-own-exoplanet-for-4-99/">nominate a name</a> and download a certificate of said nomination. People can then vote on the nominees, with voting closing on Monday night. The company running the process says it donates some of its funds to astronomy research and education efforts.</p>
+</div><p><a href="http://arstechnica.com/science/2013/04/want-to-name-an-exoplanet-after-your-cat-iau-says-dream-on/#p3">Read 1 remaining paragraphs</a> | <a href="http://arstechnica.com/science/2013/04/want-to-name-an-exoplanet-after-your-cat-iau-says-dream-on/?comments=1">Comments</a></p><div class="feedflare">
+<a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=DwW5NDqXFy8:pCwlry6nOqU:V_sGLiPBpWU"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=DwW5NDqXFy8:pCwlry6nOqU:V_sGLiPBpWU" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=DwW5NDqXFy8:pCwlry6nOqU:F7zBnMyn0Lo"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?i=DwW5NDqXFy8:pCwlry6nOqU:F7zBnMyn0Lo" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=DwW5NDqXFy8:pCwlry6nOqU:qj6IDK7rITs"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=qj6IDK7rITs" border="0"></img></a> <a href="http://feeds.arstechnica.com/~ff/arstechnica/science?a=DwW5NDqXFy8:pCwlry6nOqU:yIl2AUoC8zA"><img src="http://feeds.feedburner.com/~ff/arstechnica/science?d=yIl2AUoC8zA" border="0"></img></a>
+</div><img src="http://feeds.feedburner.com/~r/arstechnica/science/~4/DwW5NDqXFy8" height="1" width="1"/>]]></content:encoded>
+			<wfw:commentRss>http://arstechnica.com/science/2013/04/want-to-name-an-exoplanet-after-your-cat-iau-says-dream-on/feed/</wfw:commentRss>
+		<slash:comments>0</slash:comments>
+		<feedburner:origLink>http://arstechnica.com/science/2013/04/want-to-name-an-exoplanet-after-your-cat-iau-says-dream-on/</feedburner:origLink></item>
+	</channel>
 </rss>
 `
