@@ -7,8 +7,10 @@ import (
 	"html/template"
 	"net/http"
 	"sort"
+	"strconv"
 )
 
+var rootTemplate = template.Must(template.ParseFiles("tmplt/root.html"))
 var feedTemplate = template.Must(template.ParseFiles("tmplt/feed.html"))
 
 type UserInfo struct {
@@ -16,11 +18,12 @@ type UserInfo struct {
 }
 
 func init() {
-	http.HandleFunc("/", root)
-	http.HandleFunc("/add", addFeed)
+	http.HandleFunc("/", handleRoot)
+	http.HandleFunc("/feeds", handleFeeds)
+	http.HandleFunc("/add", handleAdd)
 }
 
-func root(w http.ResponseWriter, r *http.Request) {
+func handleRoot(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	u := user.Current(c)
 	if u == nil {
@@ -34,7 +37,38 @@ func root(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	feed, err := fetchAll(c, uinfo.Feeds)
+	if err := rootTemplate.Execute(w, uinfo); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func handleFeeds(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	u := user.Current(c)
+	if u == nil {
+		goToLogin(w, r)
+		return
+	}
+
+	uinfo, err := userInfo(u, c)
+	if err != nil  {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var feed Feed
+	if num := r.URL.Query().Get("n"); num == "" {
+		feed, err = fetchAll(c, uinfo.Feeds)
+	} else {
+		var n int
+		n, err = strconv.Atoi(num)
+		if err != nil || n < 0 || n >= len(uinfo.Feeds) {
+			http.NotFound(w, r)
+			return
+		}
+		feed, err = fetchFeed(c, uinfo.Feeds[n])
+	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -47,7 +81,7 @@ func root(w http.ResponseWriter, r *http.Request) {
 }
 
 // BUG(eaburns): Add reporting for success and failure
-func addFeed(w http.ResponseWriter, r *http.Request) {
+func handleAdd(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	u := user.Current(c)
 	if u == nil {
@@ -107,6 +141,7 @@ func userInfo(u *user.User, c appengine.Context) (UserInfo, error) {
 	if err != nil && err != datastore.ErrNoSuchEntity {
 		return UserInfo{}, err
 	}
+	sort.Strings(uinfo.Feeds)
 	return uinfo, nil
 }
 

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<link rel="stylesheet" href="css/acme.css">
+<title>Feed Me!</title>
+</head>
+
+<body>
+<header id="top">
+<form  action="/add" method="post">
+<input type="text" value="URL" name="url"><input type="submit" value="add">
+</form>
+<h1><a href="feeds">Feeds</a></h1>
+</header>
+
+<ol>
+{{ range $index, $elem := .Feeds }}
+	<li><a href="/feeds?n={{ $index }}">{{ $elem }}</a></li>
+{{end}}
+</ol>
+</body>
+
+</html>
