@@ -27,17 +27,11 @@ func root(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	u := user.Current(c)
 	if u == nil {
-		url, err := user.LoginURL(c, r.URL.String())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Location", url)
-		w.WriteHeader(http.StatusFound)
+		goToLogin(w, r)
 		return
 	}
 
-	uinfo, err := userInfo(c)
+	uinfo, err := userInfo(u, c)
 	if err != nil  {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -58,14 +52,13 @@ func root(w http.ResponseWriter, r *http.Request) {
 // BUG(eaburns): Add reporting for success and failure
 func addFeed(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-
 	u := user.Current(c)
 	if u == nil {
-		// Not logged in, go to the root page for login redirection.
-		http.Redirect(w, r, "/", http.StatusFound)
+		goToLogin(w, r)
 		return
 	}
 
+	// Check tha the feed is even valid.
 	client := urlfetch.Client(c)
 	url := r.FormValue("url")
 	_, err := fetchFeed(client, url)
@@ -75,7 +68,7 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
-		uinfo, err := userInfo(c)
+		uinfo, err := userInfo(u, c)
 		if err != nil {
 			return err
 		}
@@ -85,7 +78,7 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		uinfo.Feeds = append(uinfo.Feeds, url)
-		_, err = datastore.Put(c, userInfoKey(c), &uinfo)
+		_, err = datastore.Put(c, userInfoKey(u, c), &uinfo)
 		return err
 	}, nil)
 
@@ -98,11 +91,23 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+// goToLogin tries to redirect the user to the login page.
+func goToLogin(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	url, err := user.LoginURL(c, r.URL.String())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Location", url)
+	w.WriteHeader(http.StatusFound)
+}
+
 // UserInfo returns the UserInfo for the currently logged in user.
 // This function assumes that a user is loged in, otherwise it will panic.
-func userInfo(c appengine.Context) (UserInfo, error) {
+func userInfo(u *user.User, c appengine.Context) (UserInfo, error) {
 	var uinfo UserInfo
-	err := datastore.Get(c, userInfoKey(c), &uinfo)
+	err := datastore.Get(c, userInfoKey(u, c), &uinfo)
 	if err != nil && err != datastore.ErrNoSuchEntity {
 		return UserInfo{}, err
 	}
@@ -111,8 +116,8 @@ func userInfo(c appengine.Context) (UserInfo, error) {
 
 // UserInfoKey returns the key for the current user's UserInfo.
 // This function assumes that a user is loged in, otherwise it will panic.
-func userInfoKey(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "User", user.Current(c).String(), 0, nil)
+func userInfoKey(u *user.User, c appengine.Context) *datastore.Key {
+	return datastore.NewKey(c, "User", u.String(), 0, nil)
 }
 
 type Article struct {
