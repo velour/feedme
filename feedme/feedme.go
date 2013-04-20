@@ -25,13 +25,13 @@ func root(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	client := urlfetch.Client(c)
 
-	articles, err := fetchAggregateFeed(client, feeds)
+	feed, err := fetchAggregateFeed(client, feeds)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := feedTemplate.Execute(w, articles); err != nil {
+	if err := feedTemplate.Execute(w, feed); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
