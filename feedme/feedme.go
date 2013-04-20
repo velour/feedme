@@ -1,11 +1,11 @@
 package feedme
 
 import (
-	"net/http"
-	"html/template"
-	"sort"
 	"appengine"
 	"appengine/urlfetch"
+	"html/template"
+	"net/http"
+	"sort"
 
 	rss "github.com/zippoxer/RSS-Go"
 )
@@ -17,13 +17,13 @@ var feeds = []string{
 	"http://feeds.arstechnica.com/arstechnica/science",
 }
 
-func init () {
+func init() {
 	http.HandleFunc("/", root)
 }
 
 func root(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
- 	client := urlfetch.Client(c)
+	client := urlfetch.Client(c)
 
 	articles, err := fetchAggregateFeed(client, feeds)
 	if err != nil {
@@ -55,7 +55,6 @@ func (a Feed) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
-
 func fetchFeed(client *http.Client, url string) (Feed, error) {
 	resp, err := client.Get(url)
 	if err != nil {
@@ -69,7 +68,7 @@ func fetchFeed(client *http.Client, url string) (Feed, error) {
 	}
 	f := make(Feed, len(feed.Items))
 	for i := range f {
-		f[i] = Article{ Feed: feed, Item: feed.Items[i] }
+		f[i] = Article{Feed: feed, Item: feed.Items[i]}
 	}
 	return f, nil
 }
