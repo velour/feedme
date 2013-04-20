@@ -3,43 +3,37 @@ package feedme
 import (
 	"net/http"
 	"html/template"
-	"strings"	
-	"io"
 	"sort"
+	"appengine"
+	"appengine/urlfetch"
 
 	rss "github.com/zippoxer/RSS-Go"
 )
 
 var feedTemplate = template.Must(template.ParseFiles("tmplt/feed.html"))
 
+var feeds = []string{
+	"http://feeds.arstechnica.com/arstechnica/security",
+	"http://feeds.arstechnica.com/arstechnica/science",
+}
+
 func init () {
 	http.HandleFunc("/", root)
 }
 
 func root(w http.ResponseWriter, r *http.Request) {
-	articles, err := readFeeds(feeds)
+	c := appengine.NewContext(r)
+ 	client := urlfetch.Client(c)
+
+	articles, err := fetchAggregateFeed(client, feeds)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	if err := feedTemplate.Execute(w, articles); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-}
-
-func readFeeds(feeds []string) (Articles, error) {
-	var articles Articles
-
-	for _, feed := range feeds {
-		as, err := readArticles(strings.NewReader(feed))
-		if err != nil {
-			return nil, err
-		}
-		articles = append(articles, as...)
-	}
-
-	sort.Sort(articles)
-	return articles, nil
 }
 
 type Article struct {
@@ -47,28 +41,48 @@ type Article struct {
 	*rss.Item
 }
 
-type Articles []Article
+type Feed []Article
 
-func (a Articles) Len() int {
+func (a Feed) Len() int {
 	return len(a)
 }
 
-func (a Articles) Less(i, j int) bool {
+func (a Feed) Less(i, j int) bool {
 	return a[i].When.After(a[j].When)
 }
 
-func (a Articles) Swap(i, j int) {
+func (a Feed) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
 }
 
-func readArticles(in io.Reader) (Articles, error) {
-	feed, err := rss.Get(in)
+
+func fetchFeed(client *http.Client, url string) (Feed, error) {
+	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err
 	}
-	articles := make([]Article, len(feed.Items))
-	for i := range articles {
-		articles[i] = Article{ Feed: feed, Item: feed.Items[i] }
+	defer resp.Body.Close()
+
+	feed, err := rss.Get(resp.Body)
+	if err != nil {
+		return nil, err
 	}
-	return articles, nil
+	f := make(Feed, len(feed.Items))
+	for i := range f {
+		f[i] = Article{ Feed: feed, Item: feed.Items[i] }
+	}
+	return f, nil
+}
+
+func fetchAggregateFeed(client *http.Client, feeds []string) (Feed, error) {
+	var feed Feed
+	for _, url := range feeds {
+		f, err := fetchFeed(client, url)
+		if err != nil {
+			return nil, err
+		}
+		feed = append(feed, f...)
+	}
+	sort.Sort(feed)
+	return feed, nil
 }
