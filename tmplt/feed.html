@@ -2,29 +2,31 @@
 <html>
 
 <head>
-	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-	<link rel="stylesheet" href="css/acme.css">
-	<title>Feed Me!</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<link rel="stylesheet" href="css/acme.css">
+<title>Feed Me!</title>
 </head>
 
 <body>
-	<div id="addfeed">
-	<form action="/add" method="post">
-	<input type="text" value="URL" name="url"><input type="submit" value="add">
-	</form>
-	</div>
+<header id="top">
+<form  action="/add" method="post">
+<input type="text" value="URL" name="url"><input type="submit" value="add">
+</form>
+<h1>{{ .Title }}</h1>
+</header>
 
-	{{ range . }}
+{{ range .Articles }}
 	<article>
 	<header><h1><a href="{{ .Link }}">{{ .Title }}</a></h1></header>
 	<section class="description">
 	{{ .Description }}
 	</section>
 	<footer>
-	<span class="feedtitle">{{ .Feed.Title }}</span> <time datetime="{{ .DateTime }}">{{ .TimeString }}</time>
+	<span class="feedtitle">{{ .Origin.Title }}</span>
+	<time datetime="{{ .DateTime }}">{{ .TimeString }}</time>
 	</footer>
 	</article>
-	{{end}}
+{{end}}
 </body>
 
 </html>

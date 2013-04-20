@@ -8,10 +8,9 @@ import (
 	"html/template"
 	"net/http"
 	"sort"
-
-	rss "github.com/zippoxer/RSS-Go"
 )
 
+//var rootTemplate = template.Must(template.ParseFiles("tmplt/root.html"))
 var feedTemplate = template.Must(template.ParseFiles("tmplt/feed.html"))
 
 type UserInfo struct {
@@ -38,11 +37,12 @@ func root(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := urlfetch.Client(c)
-	feed, err := fetchAggregateFeed(client, uinfo.Feeds)
+	feed, err := fetchAll(client, uinfo.Feeds)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	sort.Sort(feed)
 
 	if err := feedTemplate.Execute(w, feed); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -118,62 +118,4 @@ func userInfo(u *user.User, c appengine.Context) (UserInfo, error) {
 // This function assumes that a user is loged in, otherwise it will panic.
 func userInfoKey(u *user.User, c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "User", u.String(), 0, nil)
-}
-
-type Article struct {
-	Feed *rss.Feed
-	*rss.Item
-}
-
-func (a Article) DateTime() string {
-	return a.When.Format("2006-01-02 15:04:05")
-}
-
-func (a Article) TimeString() string {
-	return a.When.Format("Mon Jan 2 15:04:05 MST 2006")
-}
-
-type Feed []Article
-
-func (a Feed) Len() int {
-	return len(a)
-}
-
-func (a Feed) Less(i, j int) bool {
-	return a[i].When.After(a[j].When)
-}
-
-func (a Feed) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}
-
-func fetchFeed(client *http.Client, url string) (Feed, error) {
-	resp, err := client.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	feed, err := rss.Get(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	f := make(Feed, len(feed.Items))
-	for i := range f {
-		f[i] = Article{Feed: feed, Item: feed.Items[i]}
-	}
-	return f, nil
-}
-
-func fetchAggregateFeed(client *http.Client, feeds []string) (Feed, error) {
-	var feed Feed
-	for _, url := range feeds {
-		f, err := fetchFeed(client, url)
-		if err != nil {
-			return nil, err
-		}
-		feed = append(feed, f...)
-	}
-	sort.Sort(feed)
-	return feed, nil
 }
