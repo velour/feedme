@@ -19,6 +19,12 @@ article header {
 	border-width: 1px;
 }
 
+article header h1 {
+	margin-top: 0em;
+	margin-bottom: 0em;
+	font-size: 14pt;
+}
+
 article footer {
 	margin-left: 2%;
 }

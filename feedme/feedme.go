@@ -32,7 +32,7 @@ var feedTemplate = template.Must(template.New("feed").Parse(`
 	<body>
 		{{ range . }}
 		<article>
-			<header><a href="{{ .Link }}">{{ .Title }}</a></header>
+			<header><h1><a href="{{ .Link }}">{{ .Title }}</a></h1></header>
 			<div class="articlebody">
 			{{ .Description }}
 			</div>
