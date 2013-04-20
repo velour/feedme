@@ -6,5 +6,7 @@ api_version: go1
 handlers:
 - url: /css
   static_dir: css
+- url: /tmplt
+  static_dir: tmplt
 - url: /.*
   script: _go_app

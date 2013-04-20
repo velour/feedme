@@ -1,0 +1,24 @@
+<!doctype html public "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+
+<html>
+
+<head>
+	<link rel="stylesheet" href="css/acme.css">
+	<title>Feed Me!</title>
+</head>
+
+<body>
+	{{ range . }}
+	<article>
+	<header><h1><a href="{{ .Link }}">{{ .Title }}</a></h1></header>
+	<div class="articlebody">
+	{{ .Description }}
+	</div>
+	<footer>
+	Updated: <time>{{ .When }}</time>
+	</footer>
+	</article>
+	{{end}}
+</body>
+
+</html>
