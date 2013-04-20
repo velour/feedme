@@ -2,7 +2,9 @@ package feedme
 
 import (
 	"appengine"
+	"appengine/datastore"
 	"appengine/urlfetch"
+	"appengine/user"
 	"html/template"
 	"net/http"
 	"sort"
@@ -12,9 +14,8 @@ import (
 
 var feedTemplate = template.Must(template.ParseFiles("tmplt/feed.html"))
 
-var feeds = []string{
-	"http://feeds.arstechnica.com/arstechnica/security",
-	"http://feeds.arstechnica.com/arstechnica/science",
+type UserInfo struct {
+	Feeds []string
 }
 
 func init() {
@@ -24,9 +25,26 @@ func init() {
 
 func root(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	client := urlfetch.Client(c)
+	u := user.Current(c)
+	if u == nil {
+		url, err := user.LoginURL(c, r.URL.String())
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Location", url)
+		w.WriteHeader(http.StatusFound)
+		return
+	}
 
-	feed, err := fetchAggregateFeed(client, feeds)
+	uinfo, err := userInfo(c)
+	if err != nil  {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	client := urlfetch.Client(c)
+	feed, err := fetchAggregateFeed(client, uinfo.Feeds)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -39,16 +57,62 @@ func root(w http.ResponseWriter, r *http.Request) {
 
 // BUG(eaburns): Add reporting for success and failure
 func addFeed(w http.ResponseWriter, r *http.Request) {
-	u := r.FormValue("url")
-
 	c := appengine.NewContext(r)
+
+	u := user.Current(c)
+	if u == nil {
+		// Not logged in, go to the root page for login redirection.
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
 	client := urlfetch.Client(c)
-	_, err := fetchFeed(client, u)
-	if err == nil {
-		feeds = append(feeds, u)
+	url := r.FormValue("url")
+	_, err := fetchFeed(client, url)
+	if err != nil {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
+	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
+		uinfo, err := userInfo(c)
+		if err != nil {
+			return err
+		}
+		for _, f := range uinfo.Feeds {
+			if f == url {
+				return nil
+			}
+		}
+		uinfo.Feeds = append(uinfo.Feeds, url)
+		_, err = datastore.Put(c, userInfoKey(c), &uinfo)
+		return err
+	}, nil)
+
+	if err != nil {
+		c.Errorf("Transaction failed: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// UserInfo returns the UserInfo for the currently logged in user.
+// This function assumes that a user is loged in, otherwise it will panic.
+func userInfo(c appengine.Context) (UserInfo, error) {
+	var uinfo UserInfo
+	err := datastore.Get(c, userInfoKey(c), &uinfo)
+	if err != nil && err != datastore.ErrNoSuchEntity {
+		return UserInfo{}, err
+	}
+	return uinfo, nil
+}
+
+// UserInfoKey returns the key for the current user's UserInfo.
+// This function assumes that a user is loged in, otherwise it will panic.
+func userInfoKey(c appengine.Context) *datastore.Key {
+	return datastore.NewKey(c, "User", user.Current(c).String(), 0, nil)
 }
 
 type Article struct {
