@@ -11,9 +11,9 @@
 	{{ range . }}
 	<article>
 	<header><h1><a href="{{ .Link }}">{{ .Title }}</a></h1></header>
-	<div class="articlebody">
+	<section class="description">
 	{{ .Description }}
-	</div>
+	</section>
 	<footer>
 	{{ .Feed.Title }} <time>{{ .When }}</time>
 	</footer>

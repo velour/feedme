@@ -29,7 +29,7 @@ article footer {
 	margin-left: 2%;
 }
 
-div.articlebody {
+article section.description {
 	margin-right: 5%;
 	margin-left: 5%;
 	margin-bottom: 1em;
