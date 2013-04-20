@@ -41,6 +41,14 @@ type Article struct {
 	*rss.Item
 }
 
+func (a Article) DateTime() string {
+	return a.When.Format("2006-01-02 15:04:05")
+}
+
+func (a Article) TimeString() string {
+	return a.When.Format("Mon Jan 2 15:04:05 MST 2006")
+}
+
 type Feed []Article
 
 func (a Feed) Len() int {

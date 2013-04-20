@@ -15,7 +15,7 @@
 	{{ .Description }}
 	</section>
 	<footer>
-	{{ .Feed.Title }} <time>{{ .When }}</time>
+	<span class="feedtitle">{{ .Feed.Title }}</span> <time datetime="{{ .DateTime }}">{{ .TimeString }}</time>
 	</footer>
 	</article>
 	{{end}}
