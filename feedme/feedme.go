@@ -19,6 +19,7 @@ var feeds = []string{
 
 func init() {
 	http.HandleFunc("/", root)
+	http.HandleFunc("/add", addFeed)
 }
 
 func root(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +35,20 @@ func root(w http.ResponseWriter, r *http.Request) {
 	if err := feedTemplate.Execute(w, feed); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+// BUG(eaburns): Add reporting for success and failure
+func addFeed(w http.ResponseWriter, r *http.Request) {
+	u := r.FormValue("url")
+
+	c := appengine.NewContext(r)
+	client := urlfetch.Client(c)
+	_, err := fetchFeed(client, u)
+	if err == nil {
+		feeds = append(feeds, u)
+	}
+
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 type Article struct {

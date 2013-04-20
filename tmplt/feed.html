@@ -8,6 +8,12 @@
 </head>
 
 <body>
+	<div id="addfeed">
+	<form action="/add" method="post">
+	<input type="text" value="URL" name="url"><input type="submit" value="add">
+	</form>
+	</div>
+
 	{{ range . }}
 	<article>
 	<header><h1><a href="{{ .Link }}">{{ .Title }}</a></h1></header>
