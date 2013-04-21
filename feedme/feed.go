@@ -22,7 +22,7 @@ func (a Article) TimeString() string {
 }
 
 type Feed struct {
-	Title string
+	Title    string
 	Articles []Article
 }
 
@@ -54,7 +54,7 @@ func fetchFeed(c appengine.Context, url string) (Feed, error) {
 	for i := range as {
 		as[i] = Article{Origin: feed, Item: feed.Items[i]}
 	}
-	return Feed{ Title: feed.Title, Articles: as }, nil
+	return Feed{Title: feed.Title, Articles: as}, nil
 }
 
 // FetchAll returns an aggregate feed fetched from a set of URLs.
@@ -67,5 +67,5 @@ func fetchAll(c appengine.Context, feeds []string) (Feed, error) {
 		}
 		as = append(as, f.Articles...)
 	}
-	return Feed{ Title: "All Feeds", Articles: as }, nil
+	return Feed{Title: "All Feeds", Articles: as}, nil
 }
