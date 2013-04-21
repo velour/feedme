@@ -12,21 +12,14 @@
 <form  action="/add" method="post">
 <input type="text" value="URL" name="url"><input type="submit" value="add">
 </form>
-<h1>{{ .Title }}</h1>
+<h1><a href="feeds">Feeds</a></h1>
 </header>
 
-{{ range .Articles }}
-	<article>
-	<header><h1><a href="{{ .Link }}">{{ .Title }}</a></h1></header>
-	<section class="description">
-	{{ .Description }}
-	</section>
-	<footer>
-	<span class="feedtitle">{{ .Origin.Title }}</span>
-	<time datetime="{{ .DateTime }}">{{ .TimeString }}</time>
-	</footer>
-	</article>
+<ol>
+{{ range $index, $elem := .Feeds }}
+	<li><a href="/feeds?n={{ $index }}">{{ $elem }}</a></li>
 {{end}}
+</ol>
 </body>
 
 </html>

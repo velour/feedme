@@ -3,15 +3,14 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
-	"appengine/urlfetch"
 	"appengine/user"
 	"html/template"
 	"net/http"
 	"sort"
-
-	rss "github.com/zippoxer/RSS-Go"
+	"strconv"
 )
 
+var rootTemplate = template.Must(template.ParseFiles("tmplt/root.html"))
 var feedTemplate = template.Must(template.ParseFiles("tmplt/feed.html"))
 
 type UserInfo struct {
@@ -19,36 +18,62 @@ type UserInfo struct {
 }
 
 func init() {
-	http.HandleFunc("/", root)
-	http.HandleFunc("/add", addFeed)
+	http.HandleFunc("/", handleRoot)
+	http.HandleFunc("/feeds", handleFeeds)
+	http.HandleFunc("/add", handleAdd)
 }
 
-func root(w http.ResponseWriter, r *http.Request) {
+func handleRoot(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 	u := user.Current(c)
 	if u == nil {
-		url, err := user.LoginURL(c, r.URL.String())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Location", url)
-		w.WriteHeader(http.StatusFound)
+		goToLogin(w, r)
 		return
 	}
 
-	uinfo, err := userInfo(c)
+	uinfo, err := userInfo(u, c)
 	if err != nil  {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	client := urlfetch.Client(c)
-	feed, err := fetchAggregateFeed(client, uinfo.Feeds)
+	if err := rootTemplate.Execute(w, uinfo); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func handleFeeds(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	u := user.Current(c)
+	if u == nil {
+		goToLogin(w, r)
+		return
+	}
+
+	uinfo, err := userInfo(u, c)
+	if err != nil  {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var feed Feed
+	if num := r.URL.Query().Get("n"); num == "" {
+		feed, err = fetchAll(c, uinfo.Feeds)
+	} else {
+		var n int
+		n, err = strconv.Atoi(num)
+		if err != nil || n < 0 || n >= len(uinfo.Feeds) {
+			http.NotFound(w, r)
+			return
+		}
+		feed, err = fetchFeed(c, uinfo.Feeds[n])
+	}
+
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	sort.Sort(feed)
 
 	if err := feedTemplate.Execute(w, feed); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -56,26 +81,24 @@ func root(w http.ResponseWriter, r *http.Request) {
 }
 
 // BUG(eaburns): Add reporting for success and failure
-func addFeed(w http.ResponseWriter, r *http.Request) {
+func handleAdd(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-
 	u := user.Current(c)
 	if u == nil {
-		// Not logged in, go to the root page for login redirection.
-		http.Redirect(w, r, "/", http.StatusFound)
+		goToLogin(w, r)
 		return
 	}
 
-	client := urlfetch.Client(c)
+	// Check tha the feed is even valid.
 	url := r.FormValue("url")
-	_, err := fetchFeed(client, url)
+	_, err := fetchFeed(c, url)
 	if err != nil {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
-		uinfo, err := userInfo(c)
+		uinfo, err := userInfo(u, c)
 		if err != nil {
 			return err
 		}
@@ -85,7 +108,7 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		uinfo.Feeds = append(uinfo.Feeds, url)
-		_, err = datastore.Put(c, userInfoKey(c), &uinfo)
+		_, err = datastore.Put(c, userInfoKey(u, c), &uinfo)
 		return err
 	}, nil)
 
@@ -98,77 +121,32 @@ func addFeed(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
+// goToLogin tries to redirect the user to the login page.
+func goToLogin(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+	url, err := user.LoginURL(c, r.URL.String())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Location", url)
+	w.WriteHeader(http.StatusFound)
+}
+
 // UserInfo returns the UserInfo for the currently logged in user.
 // This function assumes that a user is loged in, otherwise it will panic.
-func userInfo(c appengine.Context) (UserInfo, error) {
+func userInfo(u *user.User, c appengine.Context) (UserInfo, error) {
 	var uinfo UserInfo
-	err := datastore.Get(c, userInfoKey(c), &uinfo)
+	err := datastore.Get(c, userInfoKey(u, c), &uinfo)
 	if err != nil && err != datastore.ErrNoSuchEntity {
 		return UserInfo{}, err
 	}
+	sort.Strings(uinfo.Feeds)
 	return uinfo, nil
 }
 
 // UserInfoKey returns the key for the current user's UserInfo.
 // This function assumes that a user is loged in, otherwise it will panic.
-func userInfoKey(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "User", user.Current(c).String(), 0, nil)
-}
-
-type Article struct {
-	Feed *rss.Feed
-	*rss.Item
-}
-
-func (a Article) DateTime() string {
-	return a.When.Format("2006-01-02 15:04:05")
-}
-
-func (a Article) TimeString() string {
-	return a.When.Format("Mon Jan 2 15:04:05 MST 2006")
-}
-
-type Feed []Article
-
-func (a Feed) Len() int {
-	return len(a)
-}
-
-func (a Feed) Less(i, j int) bool {
-	return a[i].When.After(a[j].When)
-}
-
-func (a Feed) Swap(i, j int) {
-	a[i], a[j] = a[j], a[i]
-}
-
-func fetchFeed(client *http.Client, url string) (Feed, error) {
-	resp, err := client.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	feed, err := rss.Get(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	f := make(Feed, len(feed.Items))
-	for i := range f {
-		f[i] = Article{Feed: feed, Item: feed.Items[i]}
-	}
-	return f, nil
-}
-
-func fetchAggregateFeed(client *http.Client, feeds []string) (Feed, error) {
-	var feed Feed
-	for _, url := range feeds {
-		f, err := fetchFeed(client, url)
-		if err != nil {
-			return nil, err
-		}
-		feed = append(feed, f...)
-	}
-	sort.Sort(feed)
-	return feed, nil
+func userInfoKey(u *user.User, c appengine.Context) *datastore.Key {
+	return datastore.NewKey(c, "User", u.String(), 0, nil)
 }
