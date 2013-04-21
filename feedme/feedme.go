@@ -24,6 +24,11 @@ func init() {
 }
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" || r.Method != "GET" {
+		http.NotFound(w, r)
+		return
+	}
+
 	c := appengine.NewContext(r)
 	u := user.Current(c)
 	if u == nil {
