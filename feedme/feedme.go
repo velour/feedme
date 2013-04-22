@@ -75,7 +75,6 @@ func handleFeeds(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// BUG(eaburns): Add reporting for success and failure
 func handleAdd(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.NotFound(w, r)
