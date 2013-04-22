@@ -30,13 +30,8 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := appengine.NewContext(r)
-	u := user.Current(c)
-	if u == nil {
-		goToLogin(w, r)
-		return
-	}
 
-	uinfo, err := userInfo(u, c)
+	uinfo, err := userInfo(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -49,13 +44,8 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 func handleFeeds(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
-	u := user.Current(c)
-	if u == nil {
-		goToLogin(w, r)
-		return
-	}
 
-	uinfo, err := userInfo(u, c)
+	uinfo, err := userInfo(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -93,11 +83,6 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := appengine.NewContext(r)
-	u := user.Current(c)
-	if u == nil {
-		goToLogin(w, r)
-		return
-	}
 
 	// Check tha the feed is even valid.
 	url := r.FormValue("url")
@@ -108,7 +93,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
-		uinfo, err := userInfo(u, c)
+		uinfo, err := userInfo(c)
 		if err != nil {
 			return err
 		}
@@ -118,7 +103,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		uinfo.Feeds = append(uinfo.Feeds, url)
-		_, err = datastore.Put(c, userInfoKey(u, c), &uinfo)
+		_, err = datastore.Put(c, userInfoKey(c), &uinfo)
 		return err
 	}, nil)
 
@@ -131,23 +116,11 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-// goToLogin tries to redirect the user to the login page.
-func goToLogin(w http.ResponseWriter, r *http.Request) {
-	c := appengine.NewContext(r)
-	url, err := user.LoginURL(c, r.URL.String())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	w.Header().Set("Location", url)
-	w.WriteHeader(http.StatusFound)
-}
-
 // UserInfo returns the UserInfo for the currently logged in user.
 // This function assumes that a user is loged in, otherwise it will panic.
-func userInfo(u *user.User, c appengine.Context) (UserInfo, error) {
+func userInfo(c appengine.Context) (UserInfo, error) {
 	var uinfo UserInfo
-	err := datastore.Get(c, userInfoKey(u, c), &uinfo)
+	err := datastore.Get(c, userInfoKey(c), &uinfo)
 	if err != nil && err != datastore.ErrNoSuchEntity {
 		return UserInfo{}, err
 	}
@@ -157,6 +130,6 @@ func userInfo(u *user.User, c appengine.Context) (UserInfo, error) {
 
 // UserInfoKey returns the key for the current user's UserInfo.
 // This function assumes that a user is loged in, otherwise it will panic.
-func userInfoKey(u *user.User, c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "User", u.String(), 0, nil)
+func userInfoKey(c appengine.Context) *datastore.Key {
+	return datastore.NewKey(c, "User", user.Current(c).String(), 0, nil)
 }
