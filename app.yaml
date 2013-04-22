@@ -6,8 +6,6 @@ api_version: go1
 handlers:
 - url: /css
   static_dir: css
-- url: /tmplt
-  static_dir: tmplt
 - url: /favicon.ico
   static_files: favicon.ico
   upload: favicon.ico
