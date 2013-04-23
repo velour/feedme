@@ -6,8 +6,8 @@ import (
 	"appengine/user"
 	"html/template"
 	"net/http"
+	"path"
 	"sort"
-	"strconv"
 )
 
 var rootTemplate = template.Must(template.ParseFiles("tmplt/root.html"))
@@ -19,8 +19,18 @@ type UserInfo struct {
 
 func init() {
 	http.HandleFunc("/", handleRoot)
-	http.HandleFunc("/feeds", handleFeeds)
+	http.HandleFunc("/feeds/", handleFeeds)
 	http.HandleFunc("/add", handleAdd)
+}
+
+type root struct {
+	User  UserInfo
+	Feeds []feedInfo
+}
+
+type feedInfo struct {
+	Title      string
+	EncodedKey string
 }
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +47,24 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := rootTemplate.Execute(w, uinfo); err != nil {
+	var feeds []feedInfo
+	for _, key := range uinfo.Feeds {
+		var feed Feed
+		err := datastore.Get(c, key, &feed)
+		if err == datastore.ErrNoSuchEntity {
+			continue
+		}
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		feeds = append(feeds, feedInfo{
+			Title:      feed.Title,
+			EncodedKey: key.Encode(),
+		})
+	}
+
+	if err := rootTemplate.Execute(w, root{User: uinfo, Feeds: feeds}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -52,18 +79,22 @@ func handleFeeds(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var feed Feed
-	if num := r.URL.Query().Get("n"); num == "" {
+	if r.URL.Path == "/feeds/" {
 		feed, err = getFeeds(c, uinfo.Feeds)
 	} else {
-		var n int
-		n, err = strconv.Atoi(num)
-		if err != nil || n < 0 || n >= len(uinfo.Feeds) {
-			http.NotFound(w, r)
-			return
+		_, keyStr := path.Split(r.URL.Path)
+		if len(keyStr) > 1 {
+			keyStr = keyStr[1:] // strip leading '='
 		}
-		feed, err = getFeedByKey(c, uinfo.Feeds[n])
+		var key *datastore.Key
+		if key, err = datastore.DecodeKey(keyStr); err == nil {
+			feed, err = getFeedByKey(c, key)
+		}
 	}
-
+	if err == datastore.ErrNoSuchEntity {
+		http.NotFound(w, r)
+		return
+	}
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -116,7 +147,7 @@ func (u UserInfo) addFeed(c appengine.Context, feedKey *datastore.Key) error {
 		}
 
 		var f Feed
-		if err := datastore.Get(c, feedKey, &f); err != nil{
+		if err := datastore.Get(c, feedKey, &f); err != nil {
 			return err
 		}
 
@@ -128,7 +159,7 @@ func (u UserInfo) addFeed(c appengine.Context, feedKey *datastore.Key) error {
 		u.Feeds = append(u.Feeds, feedKey)
 		_, err := datastore.Put(c, userInfoKey(c), &u)
 		return err
-	}, &datastore.TransactionOptions{ XG: true })
+	}, &datastore.TransactionOptions{XG: true})
 }
 
 // UserInfo returns the UserInfo for the currently logged in user.

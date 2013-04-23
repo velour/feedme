@@ -17,7 +17,7 @@
 
 <ol>
 {{ range $index, $elem := .Feeds }}
-	<li><a href="/feeds?n={{ $index }}">{{ $elem }}</a></li>
+	<li><a href="/feeds/={{ .EncodedKey }}">{{ .Title }}</a></li>
 {{end}}
 </ol>
 </body>
