@@ -9,9 +9,7 @@
 
 <body>
 <header id="top">
-<form  action="/add" method="post">
-<input type="text" value="URL" name="url"><input type="submit" value="add">
-</form>
+<nav><a href="/list">[feeds]</a></nav>
 <h1>{{ .Title }}</h1>
 </header>
 
@@ -22,7 +20,7 @@
 	{{ .Description }}
 	</section>
 	<footer>
-	<span class="feedtitle">{{ .Origin.Title }}</span>
+	<span class="feedtitle">{{ .OriginTitle }}</span>
 	<time datetime="{{ .DateTime }}">{{ .TimeString }}</time>
 	</footer>
 	</article>
