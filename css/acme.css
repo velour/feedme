@@ -10,6 +10,10 @@ header#top form {
 	float: right;
 }
 
+header nav {
+	float: right;
+}
+
 article {
 	margin-top: 1em;
 	margin-bottom: 0em;

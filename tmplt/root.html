@@ -9,22 +9,27 @@
 
 <body>
 <header id="top">
-<form  action="/add" method="post">
-<input type="text" value="URL" name="url"><input type="submit" value="add">
-</form>
-<h1><a href="feeds">Feeds</a></h1>
+<h1>Feeds</h1>
 </header>
 
-<ol>
+<div class="feeditem"><a href="/">All Feeds</a></div>
 {{ range $index, $elem := .Feeds }}
-	<li><a href="/feeds/={{ .EncodedKey }}">{{ .Title }}</a>
+	<div class="feeditem">
+	<a href="/{{ .EncodedKey }}">{{ .Title }}</a>
 	<span class="whenfetched">
 	{{ if .Fresh }}
 	(Last Fetched: <time datetime="{{ .DateTime }}">{{ .TimeString }}</time>)
 	{{ end }}
-	</span></li>
+	</span>
+	</div>
 {{end}}
-</ol>
+
+<footer>
+<form  action="/add" method="post">
+<input type="submit" value="add"><input type="text" value="URL" name="url">
+</form>
+</footer>
+
 </body>
 
 </html>

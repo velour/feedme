@@ -6,7 +6,6 @@ import (
 	"appengine/user"
 	"html/template"
 	"net/http"
-	"path"
 	"sort"
 	"time"
 )
@@ -19,9 +18,9 @@ type UserInfo struct {
 }
 
 func init() {
-	http.HandleFunc("/", handleRoot)
-	http.HandleFunc("/feeds/", handleFeeds)
+	http.HandleFunc("/list", handleList)
 	http.HandleFunc("/add", handleAdd)
+	http.HandleFunc("/", handleRoot)
 }
 
 type root struct {
@@ -47,8 +46,8 @@ func (f feedInfo) Fresh() bool {
 	return time.Since(f.LastFetch) < MaxCacheTime
 }
 
-func handleRoot(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" || r.Method != "GET" {
+func handleList(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/list" || r.Method != "GET" {
 		http.NotFound(w, r)
 		return
 	}
@@ -84,7 +83,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleFeeds(w http.ResponseWriter, r *http.Request) {
+func handleRoot(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
 	uinfo, err := userInfo(c)
@@ -94,15 +93,11 @@ func handleFeeds(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var feed Feed
-	if r.URL.Path == "/feeds/" {
+	if r.URL.Path == "/" {
 		feed, err = getFeeds(c, uinfo.Feeds)
 	} else {
-		_, keyStr := path.Split(r.URL.Path)
-		if len(keyStr) > 1 {
-			keyStr = keyStr[1:] // strip leading '='
-		}
 		var key *datastore.Key
-		if key, err = datastore.DecodeKey(keyStr); err == nil {
+		if key, err = datastore.DecodeKey(r.URL.Path[1:]); err == nil {
 			feed, err = getFeedByKey(c, key)
 		}
 	}
@@ -147,7 +142,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/list", http.StatusFound)
 }
 
 // AddFeed adds a feed to the user's feed list if it is not already there.
