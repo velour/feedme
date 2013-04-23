@@ -14,7 +14,7 @@ var rootTemplate = template.Must(template.ParseFiles("tmplt/root.html"))
 var feedTemplate = template.Must(template.ParseFiles("tmplt/feed.html"))
 
 type UserInfo struct {
-	Feeds []string
+	Feeds []*datastore.Key
 }
 
 func init() {
@@ -53,7 +53,7 @@ func handleFeeds(w http.ResponseWriter, r *http.Request) {
 
 	var feed Feed
 	if num := r.URL.Query().Get("n"); num == "" {
-		feed, err = fetchAll(c, uinfo.Feeds)
+		feed, err = getFeeds(c, uinfo.Feeds)
 	} else {
 		var n int
 		n, err = strconv.Atoi(num)
@@ -61,7 +61,7 @@ func handleFeeds(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-		feed, err = fetchFeed(c, uinfo.Feeds[n])
+		feed, err = getFeedByKey(c, uinfo.Feeds[n])
 	}
 
 	if err != nil {
@@ -83,36 +83,52 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 
 	c := appengine.NewContext(r)
 
-	// Check tha the feed is even valid.
+	// Check tha the feed is even valid, and put it in the datastore.
 	url := r.FormValue("url")
-	_, err := fetchFeed(c, url)
-	if err != nil {
+	if _, err := getFeedByUrl(c, url); err != nil {
+		c.Errorf("fetchFede failed: %s\n", err.Error())
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
 
-	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
-		uinfo, err := userInfo(c)
-		if err != nil {
-			return err
-		}
-		for _, f := range uinfo.Feeds {
-			if f == url {
-				return nil
-			}
-		}
-		uinfo.Feeds = append(uinfo.Feeds, url)
-		_, err = datastore.Put(c, userInfoKey(c), &uinfo)
-		return err
-	}, nil)
-
+	u, err := userInfo(c)
 	if err != nil {
-		c.Errorf("Transaction failed: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := u.addFeed(c, urlKey(c, url)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// AddFeed adds a feed to the user's feed list if it is not already there.
+// The feed must already be in the datastore.
+func (u UserInfo) addFeed(c appengine.Context, feedKey *datastore.Key) error {
+	return datastore.RunInTransaction(c, func(c appengine.Context) error {
+		for _, k := range u.Feeds {
+			if feedKey.Equal(k) {
+				return nil
+			}
+		}
+
+		var f Feed
+		if err := datastore.Get(c, feedKey, &f); err != nil{
+			return err
+		}
+
+		f.Refs++
+		if _, err := datastore.Put(c, feedKey, &f); err != nil {
+			return err
+		}
+
+		u.Feeds = append(u.Feeds, feedKey)
+		_, err := datastore.Put(c, userInfoKey(c), &u)
+		return err
+	}, &datastore.TransactionOptions{ XG: true })
 }
 
 // UserInfo returns the UserInfo for the currently logged in user.
@@ -123,7 +139,6 @@ func userInfo(c appengine.Context) (UserInfo, error) {
 	if err != nil && err != datastore.ErrNoSuchEntity {
 		return UserInfo{}, err
 	}
-	sort.Strings(uinfo.Feeds)
 	return uinfo, nil
 }
 

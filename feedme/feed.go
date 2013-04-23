@@ -2,15 +2,19 @@ package feedme
 
 import (
 	"appengine"
+	"appengine/datastore"
 	"appengine/urlfetch"
+	"time"
 
 	rss "github.com/zippoxer/RSS-Go"
 )
 
+// Store a feed for no more than 30 minutes.
+const MaxCacheTime = time.Minute * 30
+
 type Article struct {
-	// Origin is the originating feed.
-	Origin *rss.Feed
-	*rss.Item
+	OriginTitle string
+	rss.Item
 }
 
 func (a Article) DateTime() string {
@@ -22,8 +26,11 @@ func (a Article) TimeString() string {
 }
 
 type Feed struct {
-	Title    string
-	Articles []Article
+	Title     string
+	Url       string
+	Articles  []Article
+	Refs      int
+	LastFetch time.Time
 }
 
 func (f Feed) Len() int {
@@ -38,7 +45,79 @@ func (f Feed) Swap(i, j int) {
 	f.Articles[i], f.Articles[j] = f.Articles[j], f.Articles[i]
 }
 
-// FetchFeed returns a Feed fetched from the given URL.
+// UrlKey returns the key for the given URL.
+func urlKey(c appengine.Context, url string) *datastore.Key {
+	return datastore.NewKey(c, "Feed", url, 0, nil)
+}
+
+// getFeeds returns an aggregate feed.
+func getFeeds(c appengine.Context, keys []*datastore.Key) (Feed, error) {
+	var as []Article
+	for _, k := range keys {
+		f, err := getFeedByKey(c, k)
+		if err != nil {
+			return Feed{}, err
+		}
+		as = append(as, f.Articles...)
+	}
+	return Feed{Title: "All Feeds", Articles: as}, nil
+}
+
+// GetFeedByKey loads a feed from the datastore with the given key.
+// If the Feed has not been fetched from the source within MaxCacheTime
+// then the Feed is read from it's source and added to the store.
+func getFeedByKey(c appengine.Context, key *datastore.Key) (Feed, error) {
+	var f Feed
+	err := datastore.Get(c, key, &f)
+	if err != nil {
+		return Feed{}, err
+	}
+	if time.Since(f.LastFetch) > MaxCacheTime {
+		f, err = fetchAndStoreFeed(c, f.Url)
+	}
+	return f, err
+}
+
+// GetFeedByUrl loads a feed from the datastore with the given URL.
+// If the Feed is not in the store or has not been fetched from the source
+// within MaxCacheTime then the Feed is read from it's source and added
+// to the store.
+func getFeedByUrl(c appengine.Context, url string) (Feed, error) {
+	var f Feed
+	key := urlKey(c, url)
+
+	err := datastore.Get(c, key, &f)
+	if err != nil && err != datastore.ErrNoSuchEntity {
+		return Feed{}, err
+	}
+	if err == datastore.ErrNoSuchEntity || time.Since(f.LastFetch) > MaxCacheTime {
+		f, err = fetchAndStoreFeed(c, url)
+	}
+	return f, err
+}
+
+func fetchAndStoreFeed(c appengine.Context, url string) (Feed, error) {
+	feed, err := fetchFeed(c, url)
+	if err != nil {
+		return Feed{}, err
+	}
+
+	key := urlKey(c, url)
+
+	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
+		var f Feed
+		if err := datastore.Get(c, key, &f); err != nil {
+			return err
+		}
+		feed.Refs = f.Refs
+		_, err = datastore.Put(c, key, &feed)
+		return err
+	}, nil)
+
+	return feed, err
+}
+
+// FetchFeed reads a feed from the given URL.
 func fetchFeed(c appengine.Context, url string) (Feed, error) {
 	resp, err := urlfetch.Client(c).Get(url)
 	if err != nil {
@@ -52,20 +131,12 @@ func fetchFeed(c appengine.Context, url string) (Feed, error) {
 	}
 	as := make([]Article, len(feed.Items))
 	for i := range as {
-		as[i] = Article{Origin: feed, Item: feed.Items[i]}
+		as[i] = Article{OriginTitle: feed.Title, Item: *feed.Items[i]}
 	}
-	return Feed{Title: feed.Title, Articles: as}, nil
-}
-
-// FetchAll returns an aggregate feed fetched from a set of URLs.
-func fetchAll(c appengine.Context, feeds []string) (Feed, error) {
-	var as []Article
-	for _, url := range feeds {
-		f, err := fetchFeed(c, url)
-		if err != nil {
-			return Feed{}, err
-		}
-		as = append(as, f.Articles...)
-	}
-	return Feed{Title: "All Feeds", Articles: as}, nil
+	return Feed{
+		Title:     feed.Title,
+		Url:       url,
+		Articles:  as,
+		LastFetch: time.Now(),
+	}, nil
 }
