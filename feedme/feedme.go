@@ -132,7 +132,6 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	// Check tha the feed is even valid, and put it in the datastore.
 	url := r.FormValue("url")
 	if _, err := getFeedByUrl(c, url); err != nil {
-		c.Errorf("fetchFede failed: %s\n", err.Error())
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}

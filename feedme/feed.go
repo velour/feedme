@@ -106,7 +106,12 @@ func fetchAndStoreFeed(c appengine.Context, url string) (Feed, error) {
 
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
 		var f Feed
-		if err := datastore.Get(c, key, &f); err != nil {
+		err := datastore.Get(c, key, &f)
+		if err == datastore.ErrNoSuchEntity {
+			err = nil
+			f = feed
+		}
+		if err != nil {
 			return err
 		}
 		feed.Refs = f.Refs
