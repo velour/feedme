@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path"
 	"sort"
+	"time"
 )
 
 var rootTemplate = template.Must(template.ParseFiles("tmplt/root.html"))
@@ -30,7 +31,20 @@ type root struct {
 
 type feedInfo struct {
 	Title      string
+	LastFetch  time.Time
 	EncodedKey string
+}
+
+func (f feedInfo) DateTime() string {
+	return f.LastFetch.Format("2006-01-02 15:04:05")
+}
+
+func (f feedInfo) TimeString() string {
+	return f.LastFetch.Format("Mon Jan 2 15:04:05 MST 2006")
+}
+
+func (f feedInfo) Fresh() bool {
+	return time.Since(f.LastFetch) < MaxCacheTime
 }
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +74,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		}
 		feeds = append(feeds, feedInfo{
 			Title:      feed.Title,
+			LastFetch:  feed.LastFetch,
 			EncodedKey: key.Encode(),
 		})
 	}

@@ -47,3 +47,7 @@ article footer time {
 	float: right;
 	font-style: italic;
 }
+
+span.whenfetched {
+	font-style: italic;
+}
