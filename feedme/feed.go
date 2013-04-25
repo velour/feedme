@@ -13,8 +13,13 @@ import (
 const maxCacheDuration = time.Minute * 30
 
 type Article struct {
-	OriginTitle string
-	rss.Item
+	Title, Link, OriginTitle string
+	DescriptionData          []byte
+	When                     time.Time
+}
+
+func (a Article) Description() string {
+	return string(a.DescriptionData)
 }
 
 type FeedInfo struct {
@@ -127,8 +132,14 @@ func fetchFeed(c appengine.Context, url string) (FeedInfo, error) {
 		return FeedInfo{}, err
 	}
 	as := make([]Article, len(feed.Items))
-	for i := range as {
-		as[i] = Article{OriginTitle: feed.Title, Item: *feed.Items[i]}
+	for i, item := range feed.Items {
+		as[i] = Article{
+			Title:           item.Title,
+			Link:            item.Link,
+			OriginTitle:     feed.Title,
+			DescriptionData: []byte(item.Description),
+			When:            item.When,
+		}
 	}
 	return FeedInfo{
 		Title:     feed.Title,
