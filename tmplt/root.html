@@ -18,7 +18,7 @@
 	<a href="/{{ .EncodedKey }}">{{ .Title }}</a>
 	<span class="whenfetched">
 	{{ if .Fresh }}
-	(Last Fetched: <time datetime="{{ .DateTime }}">{{ .TimeString }}</time>)
+	(Last Fetched: <time datetime="{{ dateTime .LastFetch }}">{{ timeString .LastFetch }}</time>)
 	{{ end }}
 	</span>
 	</div>

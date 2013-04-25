@@ -21,7 +21,7 @@
 	</section>
 	<footer>
 	<span class="feedtitle">{{ .OriginTitle }}</span>
-	<time datetime="{{ .DateTime }}">{{ .TimeString }}</time>
+	<time datetime="{{ dateTime  .When }}">{{  timeString .When }}</time>
 	</footer>
 	</article>
 {{end}}
