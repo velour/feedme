@@ -133,7 +133,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	// Check tha the feed is even valid, and put it in the datastore.
 	url := r.FormValue("url")
 	if _, err := getFeedByUrl(c, url); err != nil {
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
