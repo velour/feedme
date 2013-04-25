@@ -42,6 +42,12 @@ article section.description {
 	margin-top: 1em;
 }
 
+article section.description img {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+
 article footer {
 	margin-left: 2%;
 	margin-right: 2%;

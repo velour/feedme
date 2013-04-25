@@ -4,6 +4,7 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/urlfetch"
+	"html/template"
 	"time"
 
 	rss "github.com/zippoxer/RSS-Go"
@@ -18,8 +19,8 @@ type Article struct {
 	When                     time.Time
 }
 
-func (a Article) Description() string {
-	return string(a.DescriptionData)
+func (a Article) Description() template.HTML {
+	return template.HTML(a.DescriptionData)
 }
 
 type FeedInfo struct {
