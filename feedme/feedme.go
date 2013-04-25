@@ -13,7 +13,7 @@ import (
 
 var (
 	templateFiles = []string{
-		"tmplt/root.html",
+		"tmplt/list.html",
 		"tmplt/feed.html",
 	}
 
@@ -85,7 +85,7 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	if err := templates.ExecuteTemplate(w, "root.html", root{User: uinfo, Feeds: feeds}); err != nil {
+	if err := templates.ExecuteTemplate(w, "list.html", root{User: uinfo, Feeds: feeds}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
