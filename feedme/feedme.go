@@ -39,17 +39,17 @@ func init() {
 
 type root struct {
 	User  UserInfo
-	Feeds []feedInfo
+	Feeds []userFeedInfo
 }
 
 // FeedInfo is the information about a feed in the user's feed list.
-type feedInfo struct {
+type userFeedInfo struct {
 	Title      string
 	LastFetch  time.Time
 	EncodedKey string
 }
 
-func (f feedInfo) Fresh() bool {
+func (f userFeedInfo) Fresh() bool {
 	return time.Since(f.LastFetch) < maxCacheDuration
 }
 
@@ -67,9 +67,9 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var feeds []feedInfo
+	var feeds []userFeedInfo
 	for _, key := range uinfo.Feeds {
-		var feed Feed
+		var feed FeedInfo
 		err := datastore.Get(c, key, &feed)
 		if err == datastore.ErrNoSuchEntity {
 			continue
@@ -78,7 +78,7 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		feeds = append(feeds, feedInfo{
+		feeds = append(feeds, userFeedInfo{
 			Title:      feed.Title,
 			LastFetch:  feed.LastFetch,
 			EncodedKey: key.Encode(),
@@ -99,7 +99,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var feed Feed
+	var feed FeedInfo
 	if r.URL.Path == "/" {
 		feed, err = getFeeds(c, uinfo.Feeds)
 	} else {
@@ -165,7 +165,7 @@ func addFeed(c appengine.Context, feedKey *datastore.Key) error {
 			}
 		}
 
-		var f Feed
+		var f FeedInfo
 		if err := datastore.Get(c, feedKey, &f); err != nil {
 			return err
 		}
