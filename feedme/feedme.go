@@ -11,13 +11,13 @@ import (
 )
 
 var (
-	templateFiles = []string {
+	templateFiles = []string{
 		"tmplt/root.html",
 		"tmplt/feed.html",
 	}
 
-	funcs = template.FuncMap {
-		"dateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
+	funcs = template.FuncMap{
+		"dateTime":   func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
 		"timeString": func(t time.Time) string { return t.Format("Mon Jan 2 15:04:05 MST 2006") },
 	}
 
