@@ -42,6 +42,7 @@ type root struct {
 	Feeds []feedInfo
 }
 
+// FeedInfo is the information about a feed in the user's feed list.
 type feedInfo struct {
 	Title      string
 	LastFetch  time.Time
@@ -49,7 +50,7 @@ type feedInfo struct {
 }
 
 func (f feedInfo) Fresh() bool {
-	return time.Since(f.LastFetch) < MaxCacheTime
+	return time.Since(f.LastFetch) < maxCacheDuration
 }
 
 func handleList(w http.ResponseWriter, r *http.Request) {

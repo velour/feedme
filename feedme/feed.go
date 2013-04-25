@@ -9,8 +9,8 @@ import (
 	rss "github.com/zippoxer/RSS-Go"
 )
 
-// Store a feed for no more than 30 minutes.
-const MaxCacheTime = time.Minute * 30
+// maxCacheDuration is the length of time to store a feed before refetching it
+const maxCacheDuration = time.Minute * 30
 
 type Article struct {
 	OriginTitle string
@@ -64,7 +64,7 @@ func getFeedByKey(c appengine.Context, key *datastore.Key) (Feed, error) {
 	if err != nil {
 		return Feed{}, err
 	}
-	if time.Since(f.LastFetch) > MaxCacheTime {
+	if time.Since(f.LastFetch) > maxCacheDuration {
 		f, err = fetchAndStoreFeed(c, f.Url)
 	}
 	return f, err
@@ -82,7 +82,7 @@ func getFeedByUrl(c appengine.Context, url string) (Feed, error) {
 	if err != nil && err != datastore.ErrNoSuchEntity {
 		return Feed{}, err
 	}
-	if err == datastore.ErrNoSuchEntity || time.Since(f.LastFetch) > MaxCacheTime {
+	if err == datastore.ErrNoSuchEntity || time.Since(f.LastFetch) > maxCacheDuration {
 		f, err = fetchAndStoreFeed(c, url)
 	}
 	return f, err
