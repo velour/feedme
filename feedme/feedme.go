@@ -134,13 +134,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	u, err := userInfo(c)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err := u.addFeed(c, urlKey(c, url)); err != nil {
+	if err := addFeed(c, urlKey(c, url)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -150,8 +144,13 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 
 // AddFeed adds a feed to the user's feed list if it is not already there.
 // The feed must already be in the datastore.
-func (u UserInfo) addFeed(c appengine.Context, feedKey *datastore.Key) error {
+func addFeed(c appengine.Context, feedKey *datastore.Key) error {
 	return datastore.RunInTransaction(c, func(c appengine.Context) error {
+		u, err := userInfo(c)
+		if err != nil {
+			return err
+		}
+
 		for _, k := range u.Feeds {
 			if feedKey.Equal(k) {
 				return nil
@@ -169,7 +168,7 @@ func (u UserInfo) addFeed(c appengine.Context, feedKey *datastore.Key) error {
 		}
 
 		u.Feeds = append(u.Feeds, feedKey)
-		_, err := datastore.Put(c, userInfoKey(c), &u)
+		_, err = datastore.Put(c, userInfoKey(c), &u)
 		return err
 	}, &datastore.TransactionOptions{XG: true})
 }
