@@ -99,13 +99,22 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var feed FeedInfo
+	var feedPage = struct {
+		Title    string
+		Articles Articles
+	}{}
+
 	if r.URL.Path == "/" {
-		feed, err = getFeeds(c, uinfo.Feeds)
+		feedPage.Title = "All Feeds"
+		feedPage.Articles, err = getArticles(c, uinfo.Feeds...)
 	} else {
 		var key *datastore.Key
 		if key, err = datastore.DecodeKey(r.URL.Path[1:]); err == nil {
-			feed, err = getFeedByKey(c, key)
+			var f FeedInfo
+			if f, err = getFeedInfoByKey(c, key); err == nil {
+				feedPage.Title = f.Title
+				feedPage.Articles, err = getArticles(c, key)
+			}
 		}
 	}
 	if err == datastore.ErrNoSuchEntity {
@@ -116,9 +125,10 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	sort.Sort(feed)
 
-	if err := templates.ExecuteTemplate(w, "feed.html", feed); err != nil {
+	sort.Sort(feedPage.Articles)
+
+	if err := templates.ExecuteTemplate(w, "feed.html", feedPage); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -133,12 +143,12 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 
 	// Check tha the feed is even valid, and put it in the datastore.
 	url := r.FormValue("url")
-	if _, err := getFeedByUrl(c, url); err != nil {
+	if _, err := getFeedInfoByUrl(c, url); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := addFeed(c, urlKey(c, url)); err != nil {
+	if err := addFeed(c, datastore.NewKey(c, "Feed", url, 0, nil)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
