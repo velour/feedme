@@ -13,15 +13,15 @@
 <h1>{{ .Title }}</h1>
 </header>
 
-{{ range .Articles }}
-	<article>
-	<header><h1><a href="{{ .Link }}">{{ .Title }}</a></h1></header>
+{{ range $index, $elem := .Articles }}
+	<article{{ if not $index }} class="top"{{ end }}>
+	<header><h1><a href="{{ $elem.Link }}">{{ $elem.Title }}</a></h1></header>
 	<section class="description">
-	{{ .Description }}
+	{{ $elem.Description }}
 	</section>
 	<footer>
-	<span class="feedtitle">{{ .OriginTitle }}</span>
-	<time datetime="{{ dateTime  .When }}">{{  timeString .When }}</time>
+	<span class="feedtitle">{{ $elem.OriginTitle }}</span>
+	<time datetime="{{ dateTime  $elem.When }}">{{  timeString $elem.When }}</time>
 	</footer>
 	</article>
 {{end}}
