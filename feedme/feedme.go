@@ -10,13 +10,19 @@ import (
 	"time"
 )
 
-var funcs = template.FuncMap {
-	"dateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
-	"timeString": func(t time.Time) string { return t.Format("Mon Jan 2 15:04:05 MST 2006") },
-}
+var (
+	templateFiles = []string {
+		"tmplt/root.html",
+		"tmplt/feed.html",
+	}
 
-var rootTemplate = template.Must(template.New("root").Funcs(funcs).ParseFiles("tmplt/root.html"))
-var feedTemplate = template.Must(template.New("feed").Funcs(funcs).ParseFiles("tmplt/feed.html"))
+	funcs = template.FuncMap {
+		"dateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
+		"timeString": func(t time.Time) string { return t.Format("Mon Jan 2 15:04:05 MST 2006") },
+	}
+
+	templates = template.Must(template.New("t").Funcs(funcs).ParseFiles(templateFiles...))
+)
 
 type UserInfo struct {
 	Feeds []*datastore.Key
@@ -75,7 +81,7 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	if err := rootTemplate.ExecuteTemplate(w, "root.html", root{User: uinfo, Feeds: feeds}); err != nil {
+	if err := templates.ExecuteTemplate(w, "root.html", root{User: uinfo, Feeds: feeds}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -108,7 +114,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Sort(feed)
 
-	if err := feedTemplate.ExecuteTemplate(w, "feed.html", feed); err != nil {
+	if err := templates.ExecuteTemplate(w, "feed.html", feed); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
