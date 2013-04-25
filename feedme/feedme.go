@@ -4,14 +4,28 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
+	"fmt"
 	"html/template"
 	"net/http"
 	"sort"
 	"time"
 )
 
-var rootTemplate = template.Must(template.ParseFiles("tmplt/root.html"))
-var feedTemplate = template.Must(template.ParseFiles("tmplt/feed.html"))
+var (
+	templateFiles = []string{
+		"tmplt/root.html",
+		"tmplt/feed.html",
+	}
+
+	funcs = template.FuncMap{
+		"dateTime":   func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
+		"timeString": func(t time.Time) string { return t.Format("Mon Jan 2 15:04:05 MST 2006") },
+	}
+
+	templates = template.Must(template.New("t").Funcs(funcs).ParseFiles(templateFiles...))
+)
+
+const maxFeeds = 50
 
 type UserInfo struct {
 	Feeds []*datastore.Key
@@ -32,14 +46,6 @@ type feedInfo struct {
 	Title      string
 	LastFetch  time.Time
 	EncodedKey string
-}
-
-func (f feedInfo) DateTime() string {
-	return f.LastFetch.Format("2006-01-02 15:04:05")
-}
-
-func (f feedInfo) TimeString() string {
-	return f.LastFetch.Format("Mon Jan 2 15:04:05 MST 2006")
 }
 
 func (f feedInfo) Fresh() bool {
@@ -78,7 +84,7 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	if err := rootTemplate.Execute(w, root{User: uinfo, Feeds: feeds}); err != nil {
+	if err := templates.ExecuteTemplate(w, "root.html", root{User: uinfo, Feeds: feeds}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -111,7 +117,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 	sort.Sort(feed)
 
-	if err := feedTemplate.Execute(w, feed); err != nil {
+	if err := templates.ExecuteTemplate(w, "feed.html", feed); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -127,17 +133,11 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	// Check tha the feed is even valid, and put it in the datastore.
 	url := r.FormValue("url")
 	if _, err := getFeedByUrl(c, url); err != nil {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
-
-	u, err := userInfo(c)
-	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := u.addFeed(c, urlKey(c, url)); err != nil {
+	if err := addFeed(c, urlKey(c, url)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -147,8 +147,17 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 
 // AddFeed adds a feed to the user's feed list if it is not already there.
 // The feed must already be in the datastore.
-func (u UserInfo) addFeed(c appengine.Context, feedKey *datastore.Key) error {
+func addFeed(c appengine.Context, feedKey *datastore.Key) error {
 	return datastore.RunInTransaction(c, func(c appengine.Context) error {
+		u, err := userInfo(c)
+		if err != nil {
+			return err
+		}
+
+		if len(u.Feeds) >= maxFeeds {
+			return fmt.Errorf("Too many feeds, max is %d", maxFeeds)
+		}
+
 		for _, k := range u.Feeds {
 			if feedKey.Equal(k) {
 				return nil
@@ -166,7 +175,7 @@ func (u UserInfo) addFeed(c appengine.Context, feedKey *datastore.Key) error {
 		}
 
 		u.Feeds = append(u.Feeds, feedKey)
-		_, err := datastore.Put(c, userInfoKey(c), &u)
+		_, err = datastore.Put(c, userInfoKey(c), &u)
 		return err
 	}, &datastore.TransactionOptions{XG: true})
 }
