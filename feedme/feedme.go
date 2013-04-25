@@ -4,6 +4,7 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/user"
+	"fmt"
 	"html/template"
 	"net/http"
 	"sort"
@@ -23,6 +24,8 @@ var (
 
 	templates = template.Must(template.New("t").Funcs(funcs).ParseFiles(templateFiles...))
 )
+
+const maxFeeds = 50
 
 type UserInfo struct {
 	Feeds []*datastore.Key
@@ -149,6 +152,10 @@ func addFeed(c appengine.Context, feedKey *datastore.Key) error {
 		u, err := userInfo(c)
 		if err != nil {
 			return err
+		}
+
+		if len(u.Feeds) >= maxFeeds {
+			return fmt.Errorf("Too many feeds, max is %d", maxFeeds)
 		}
 
 		for _, k := range u.Feeds {
