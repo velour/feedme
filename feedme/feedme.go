@@ -99,6 +99,11 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(uinfo.Feeds) == 0 {
+		http.Redirect(w, r, "/list", http.StatusFound)
+		return
+	}
+
 	var feedPage = struct {
 		Title    string
 		Articles Articles
