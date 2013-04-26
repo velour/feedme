@@ -70,5 +70,6 @@ article section.description img {
 }
 
 span.whenfetched {
+	margin-left: 1%;
 	font-style: italic;
 }

@@ -132,15 +132,26 @@ func refreshFeed(c appengine.Context, url string) (FeedInfo, error) {
 	return feed, err
 }
 
+func rmArticles(c appengine.Context, feedKey *datastore.Key) error {
+	q := datastore.NewQuery("Article").Ancestor(feedKey).KeysOnly()
+	for it := q.Run(c); ; {
+		k, err := it.Next(nil)
+		switch {
+		case err == datastore.Done:
+			return nil
+		case err != nil:
+			return err
+		}
+		if err := datastore.Delete(c, k); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // UpdateArticles removes the old articles from the given feed and adds the new ones.
 func updateArticles(c appengine.Context, feedKey *datastore.Key, articles []Article) error {
-	old, err := datastore.NewQuery("Article").Ancestor(feedKey).KeysOnly().GetAll(c, nil)
-	if err != nil {
-		return err
-	}
-
-	err = datastore.DeleteMulti(c, old)
-	if err != nil {
+	if err := rmArticles(c, feedKey); err != nil {
 		return err
 	}
 
@@ -152,7 +163,7 @@ func updateArticles(c appengine.Context, feedKey *datastore.Key, articles []Arti
 	// Note: if we ever add ref counts to articles then this needs to
 	// go in a transaction that reads the articles to see if they already
 	// exist with a positive number of refs before putting.
-	_, err = datastore.PutMulti(c, keys, articles)
+	_, err := datastore.PutMulti(c, keys, articles)
 	return err
 }
 

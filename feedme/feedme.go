@@ -34,6 +34,7 @@ type UserInfo struct {
 func init() {
 	http.HandleFunc("/list", handleList)
 	http.HandleFunc("/add", handleAdd)
+	http.HandleFunc("/rm", handleRm)
 	http.HandleFunc("/", handleRoot)
 }
 
@@ -163,6 +164,33 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/list", http.StatusFound)
 }
 
+func handleRm(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.NotFound(w, r)
+		return
+	}
+
+	c := appengine.NewContext(r)
+
+	uinfo, err := userInfo(c)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	for _, k := range uinfo.Feeds {
+		if r.FormValue(k.Encode()) != "on" {
+			continue
+		}
+		if err := rmFeed(c, k); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	http.Redirect(w, r, "/list", http.StatusFound)
+}
+
 // AddFeed adds a feed to the user's feed list if it is not already there.
 // The feed must already be in the datastore.
 func addFeed(c appengine.Context, feedKey *datastore.Key) error {
@@ -193,6 +221,48 @@ func addFeed(c appengine.Context, feedKey *datastore.Key) error {
 		}
 
 		u.Feeds = append(u.Feeds, feedKey)
+		_, err = datastore.Put(c, userInfoKey(c), &u)
+		return err
+	}, &datastore.TransactionOptions{XG: true})
+}
+
+// RmFeed removes a feed from the user's feed list.
+func rmFeed(c appengine.Context, feedKey *datastore.Key) error {
+	return datastore.RunInTransaction(c, func(c appengine.Context) error {
+		u, err := userInfo(c)
+		if err != nil {
+			return err
+		}
+
+		i := 0
+		var k *datastore.Key
+		for i, k = range u.Feeds {
+			if feedKey.Equal(k) {
+				break
+			}
+		}
+		if i >= len(u.Feeds) {
+			return nil
+		}
+
+		var f FeedInfo
+		if err := datastore.Get(c, feedKey, &f); err != nil {
+			return err
+		}
+
+		f.Refs--
+		if f.Refs <= 0 {
+			if err := rmArticles(c, feedKey); err != nil {
+				return err
+			}
+			if err := datastore.Delete(c, feedKey); err != nil {
+				return err
+			}
+		} else if _, err := datastore.Put(c, feedKey, &f); err != nil {
+			return err
+		}
+
+		u.Feeds = append(u.Feeds[:i], u.Feeds[i+1:]...)
 		_, err = datastore.Put(c, userInfoKey(c), &u)
 		return err
 	}, &datastore.TransactionOptions{XG: true})
