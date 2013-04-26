@@ -15,7 +15,13 @@
 
 {{ range $index, $elem := .Articles }}
 	<article{{ if not $index }} class="top"{{ end }}>
-	<header><h1><a href="{{ $elem.Link }}">{{ $elem.Title }}</a></h1></header>
+	<header>
+	<span class="box"><h1>&nbsp;&nbsp;&nbsp;&nbsp;</h1></span>
+	<span class="title">
+	<h1><a href="{{ $elem.Link }}">{{ $elem.Title }}</a></h1>
+	</span>
+	</header>
+
 	<section class="description">
 	{{ $elem.Description }}
 	</section>
