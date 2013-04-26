@@ -16,6 +16,17 @@ var feedme = {
 		$("article section.description").show();
 	},
 }
+
+$(document).ready(function(){
+	$("article header span.box").click(function(event){
+		var sect = $(event.target).closest("article").find("section.description");
+		if (sect.css("display") === "none") {
+			sect.show();
+		} else {
+			sect.hide();
+		}
+	});
+});
 </script>
 
 <link rel="stylesheet" href="css/acme.css">
@@ -37,7 +48,7 @@ var feedme = {
 
 	<header>
 	<div>
-	<span class="box"><h1>&nbsp;&nbsp;&nbsp;&nbsp;</h1></span>
+	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
 	<h1><a href="{{ $elem.Link }}">{{ $elem.Title }}</a></h1>
 	</div>
 
