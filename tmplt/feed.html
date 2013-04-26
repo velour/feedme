@@ -15,20 +15,22 @@
 
 {{ range $index, $elem := .Articles }}
 	<article{{ if not $index }} class="top"{{ end }}>
+
 	<header>
+	<div>
 	<span class="box"><h1>&nbsp;&nbsp;&nbsp;&nbsp;</h1></span>
-	<span class="title">
 	<h1><a href="{{ $elem.Link }}">{{ $elem.Title }}</a></h1>
-	</span>
+	</div>
+
+	<div class="meta">
+	<span class="origin">{{ $elem.OriginTitle }}</span>
+	<time datetime="{{ dateTime  $elem.When }}">{{  timeString $elem.When }}</time>
+	</div>
 	</header>
 
 	<section class="description">
 	{{ $elem.Description }}
 	</section>
-	<footer>
-	<span class="feedtitle">{{ $elem.OriginTitle }}</span>
-	<time datetime="{{ dateTime  $elem.When }}">{{  timeString $elem.When }}</time>
-	</footer>
 	</article>
 {{end}}
 </body>

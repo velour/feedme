@@ -15,8 +15,8 @@ header nav {
 }
 
 article {
-	margin-top: 0em;
-	margin-bottom: 0em;
+	margin-top: 0;
+	margin-bottom: 0;
 	background-color: #FFFFEA;
 	border-top-style: none;
 	border-left-style: solid;
@@ -38,6 +38,15 @@ article header {
 	border-width: 1px;
 }
 
+article header span.box {
+	padding: 0;
+	margin: 0;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #8888CC;
+	height: 100%;
+}
+
 article header h1 {
 	display: inline;
 	margin-top: 0;
@@ -45,18 +54,14 @@ article header h1 {
 	font-size: 120%;
 }
 
-article header span.box {
-	padding: 0px;
-	margin: 0px;
-	border-style: solid;
-	border-width: 2px;
-	border-color: #8888CC;
-	height: 100%;
+article header div.meta {
+	font-style: italic;
+	margin-left: 3%;
 }
 
 article section.description {
-	margin-right: 5%;
-	margin-left: 5%;
+	margin-right: 3%;
+	margin-left: 3%;
 	margin-bottom: 1em;
 	margin-top: 1em;
 }
@@ -65,16 +70,6 @@ article section.description img {
 	display: block;
 	margin-left: auto;
 	margin-right: auto;
-}
-
-article footer {
-	margin-left: 2%;
-	margin-right: 2%;
-}
-
-article footer time {
-	float: right;
-	font-style: italic;
 }
 
 span.whenfetched {
