@@ -120,6 +120,8 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 				feedPage.Title = f.Title
 				feedPage.Articles, err = getArticles(c, key)
 			}
+		} else {
+			err = fmt.Errorf("Failed to find feed")
 		}
 	}
 	if err == datastore.ErrNoSuchEntity {
