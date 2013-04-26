@@ -18,13 +18,8 @@ article {
 	margin-top: 0;
 	margin-bottom: 0;
 	background-color: #FFFFEA;
-	border-top-style: none;
-	border-left-style: solid;
-	border-left-width: 1px;
-	border-right-style: solid;
-	border-right-width: 1px;
-	border-bottom-style: solid;
-	border-bottom-width: 1px;
+	border-style: none solid solid solid;
+	border-width: 0 1px 1px 1px;
 }
 
 article.top {
