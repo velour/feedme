@@ -132,6 +132,7 @@ func refreshFeed(c appengine.Context, url string) (FeedInfo, error) {
 	return feed, err
 }
 
+// RmArticles removes the articles associated with a feed.
 func rmArticles(c appengine.Context, feedKey *datastore.Key) error {
 	q := datastore.NewQuery("Article").Ancestor(feedKey).KeysOnly()
 	for it := q.Run(c); ; {
