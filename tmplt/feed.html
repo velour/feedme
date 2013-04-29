@@ -3,26 +3,64 @@
 
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+<script type="text/javascript">
+var feedme = {
+	collapseAll: function () {
+		$("article section.description").hide();
+	},
+
+	expandAll: function () {
+		$("article section.description").show();
+	},
+}
+
+$(document).ready(function(){
+	$("article header span.box").click(function(event){
+		var sect = $(event.target).closest("article").find("section.description");
+		if (sect.css("display") === "none") {
+			sect.show();
+		} else {
+			sect.hide();
+		}
+	});
+});
+</script>
+
 <link rel="stylesheet" href="css/acme.css">
 <title>Feed Me!</title>
 </head>
 
 <body>
 <header id="top">
-<nav><a href="/list">[feeds]</a></nav>
+<nav>
+<a href="/list">[manage feeds]</a>
+<a href="javascript:feedme.collapseAll()">[collapse all]</a>
+<a href="javascript:feedme.expandAll()">[expand all]</a>
+</nav>
 <h1>{{ .Title }}</h1>
 </header>
 
-{{ range .Articles }}
-	<article>
-	<header><h1><a href="{{ .Link }}">{{ .Title }}</a></h1></header>
+{{ range $index, $elem := .Articles }}
+	<article{{ if not $index }} class="top"{{ end }}>
+
+	<header>
+	<div>
+	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+	<h1><a href="{{ $elem.Link }}">{{ $elem.Title }}</a></h1>
+	</div>
+
+	<div class="meta">
+	<span class="origin">{{ $elem.OriginTitle }}</span>
+	<time datetime="{{ dateTime  $elem.When }}">{{  timeString $elem.When }}</time>
+	</div>
+	</header>
+
 	<section class="description">
-	{{ .Description }}
+	{{ $elem.Description }}
 	</section>
-	<footer>
-	<span class="feedtitle">{{ .OriginTitle }}</span>
-	<time datetime="{{ dateTime  .When }}">{{  timeString .When }}</time>
-	</footer>
 	</article>
 {{end}}
 </body>

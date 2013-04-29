@@ -15,43 +15,62 @@ header nav {
 }
 
 article {
-	margin-top: 1em;
-	margin-bottom: 0em;
+	margin-top: 0;
+	margin-bottom: 0;
 	background-color: #FFFFEA;
-	border-style: solid;
-	border-width: 1px;
+	border-style: none solid solid solid;
+	border-width: 0 1px 1px 1px;
+}
+
+article.top {
+	border-top-style: solid;
+	border-top-width: 1px;
 }
 
 article header {
-	text-align: center;
 	background-color: #EAFFFF;
 	border-bottom-style: solid;
 	border-width: 1px;
+	padding-top: 2px; /* article header span.box border size */
+}
+
+article header span.box {
+	margin-top: 2px;
+	border-style: solid;
+	border-width: 2px;
+	border-color: #8888CC;
+	height: 100%;
 }
 
 article header h1 {
+	display: inline;
 	margin-top: 0;
 	margin-bottom: 0;
-	font-size: 120%;
+	font-size: medium;
+	text-transform: capitalize;
+}
+
+article header div.meta {
+	font-style: italic;
+	font-size: small;
+	margin-left: 3%;
 }
 
 article section.description {
-	margin-right: 5%;
-	margin-left: 5%;
+	display: none;
+	margin-right: 3%;
+	margin-left: 3%;
 	margin-bottom: 1em;
 	margin-top: 1em;
 }
 
-article footer {
-	margin-left: 2%;
-	margin-right: 2%;
-}
-
-article footer time {
-	float: right;
-	font-style: italic;
+article section.description img {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 span.whenfetched {
+	margin-left: 1%;
 	font-style: italic;
 }

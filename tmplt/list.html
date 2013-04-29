@@ -11,10 +11,11 @@
 <header id="top">
 <h1>Feeds</h1>
 </header>
-
 <div class="feeditem"><a href="/">All Feeds</a></div>
+<form action="/rm" method="post">
 {{ range $index, $elem := .Feeds }}
 	<div class="feeditem">
+	<input type="checkbox" name="{{ .EncodedKey}}">
 	<a href="/{{ .EncodedKey }}">{{ .Title }}</a>
 	<span class="whenfetched">
 	{{ if .Fresh }}
@@ -23,12 +24,11 @@
 	</span>
 	</div>
 {{end}}
-
-<footer>
-<form  action="/add" method="post">
-<input type="submit" value="add"><input type="text" value="URL" name="url">
+<input type="submit" value="unsubscribe">
 </form>
-</footer>
+<form  action="/add" method="post">
+<input type="submit" value="subscribe"><input type="text" value="" name="url">
+</form>
 
 </body>
 
