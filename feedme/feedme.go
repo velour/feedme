@@ -3,7 +3,6 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
-	"errors"
 	"html/template"
 	"net/http"
 	"sort"
@@ -105,19 +104,11 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path == "/" {
 		feedPage.Title = "All Feeds"
-		feedPage.Articles, err = getArticles(c, uinfo.Feeds...)
+		feedPage.Articles, err = allArticles(c, uinfo)
 	} else {
-		var key *datastore.Key
-		if key, err = datastore.DecodeKey(r.URL.Path[1:]); err == nil {
-			var f FeedInfo
-			if f, err = getFeedInfoByKey(c, key); err == nil {
-				feedPage.Title = f.Title
-				feedPage.Articles, err = getArticles(c, key)
-			}
-		} else {
-			err = errors.New("Failed to find feed")
-		}
+		feedPage.Title, feedPage.Articles, err = articlesForPath(c, r.URL.Path[1:])
 	}
+
 	if err == datastore.ErrNoSuchEntity {
 		http.NotFound(w, r)
 		return
@@ -132,6 +123,30 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	if err := templates.ExecuteTemplate(w, "feed.html", feedPage); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
+}
+
+func allArticles(c appengine.Context, uinfo UserInfo) (Articles, error) {
+	// Refresh feeds if they need it…
+	for _, k := range uinfo.Feeds {
+		if _, err := getFeedInfoByKey(c, k); err != nil {
+			return nil, err
+		}
+	}
+	return getArticles(c, uinfo.Feeds...)
+}
+
+func articlesForPath(c appengine.Context, path string) (string, Articles, error) {
+	var key *datastore.Key
+	var err error
+	if key, err = datastore.DecodeKey(path); err != nil {
+		return "", nil, err
+	}
+	var f FeedInfo
+	if f, err = getFeedInfoByKey(c, key); err != nil {
+		return "", nil, err
+	}
+	as, err := getArticles(c, key)
+	return f.Title, as, err
 }
 
 func handleAdd(w http.ResponseWriter, r *http.Request) {
