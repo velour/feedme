@@ -132,6 +132,7 @@ func refreshFeed(c appengine.Context, url string) (FeedInfo, error) {
 	return feed, err
 }
 
+// RmArticles removes the articles associated with a feed.
 func rmArticles(c appengine.Context, feedKey *datastore.Key) error {
 	q := datastore.NewQuery("Article").Ancestor(feedKey).KeysOnly()
 	for it := q.Run(c); ; {
@@ -151,20 +152,36 @@ func rmArticles(c appengine.Context, feedKey *datastore.Key) error {
 
 // UpdateArticles removes the old articles from the given feed and adds the new ones.
 func updateArticles(c appengine.Context, feedKey *datastore.Key, articles []Article) error {
-	if err := rmArticles(c, feedKey); err != nil {
-		return err
+	q := datastore.NewQuery("Article").Ancestor(feedKey).KeysOnly()
+	stored := make(map[string]*datastore.Key)
+	for it := q.Run(c); ; {
+		k, err := it.Next(nil)
+		if err == datastore.Done {
+			break
+		} else if err != nil {
+			return err
+		}
+		stored[k.StringID()] = k
 	}
 
-	keys := make([]*datastore.Key, len(articles))
-	for i, a := range articles {
-		keys[i] = datastore.NewKey(c, "Article", a.Link, 0, feedKey)
+	for _, a := range articles {
+		k := datastore.NewKey(c, "Article", a.Link, 0, feedKey)
+		id := k.StringID()
+		if _, ok := stored[id]; ok {
+			delete(stored, id)
+			continue
+		}
+		if _, err := datastore.Put(c, k, a); err != nil {
+			return err
+		}
 	}
 
-	// Note: if we ever add ref counts to articles then this needs to
-	// go in a transaction that reads the articles to see if they already
-	// exist with a positive number of refs before putting.
-	_, err := datastore.PutMulti(c, keys, articles)
-	return err
+	for _, k := range stored {
+		if err := datastore.Delete(c, k); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // FetchFeed reads a feed from the given URL.
