@@ -5,13 +5,20 @@ import (
 	"appengine/datastore"
 	"appengine/urlfetch"
 	"html/template"
+	"sort"
 	"time"
 
 	rss "github.com/zippoxer/RSS-Go"
 )
 
-// maxCacheDuration is the length of time to store a feed before refetching it
-const maxCacheDuration = time.Minute * 30
+const (
+	// MaxCacheDuration is the length of time to store a feed before refetching it
+	maxCacheDuration = time.Minute * 30
+
+	// MaxNewArticles is the maximum number of articles stored when fetching
+	// new articles from a feed.
+	maxNewArticles = 10
+)
 
 // An Article is a single article from a feed.
 type Article struct {
@@ -104,6 +111,10 @@ func refreshFeed(c appengine.Context, url string) (FeedInfo, error) {
 	feed, articles, err := fetchFeed(c, url)
 	if err != nil {
 		return FeedInfo{}, err
+	}
+	sort.Sort(articles)
+	if len(articles) > maxNewArticles {
+		articles = articles[:maxNewArticles]
 	}
 
 	feedKey := datastore.NewKey(c, "Feed", url, 0, nil)
