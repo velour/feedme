@@ -171,7 +171,7 @@ func updateArticles(c appengine.Context, feedKey *datastore.Key, articles []Arti
 			delete(stored, id)
 			continue
 		}
-		if _, err := datastore.Put(c, k, a); err != nil {
+		if _, err := datastore.Put(c, k, &a); err != nil {
 			return err
 		}
 	}
