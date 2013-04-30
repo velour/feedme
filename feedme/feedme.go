@@ -164,7 +164,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := subscribe(c, datastore.NewKey(c, "Feed", url, 0, nil)); err != nil {
+	if err := subscribe(c, datastore.NewKey(c, feedKind, url, 0, nil)); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
