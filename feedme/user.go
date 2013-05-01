@@ -7,7 +7,12 @@ import (
 	"fmt"
 )
 
-const maxFeeds = 50
+const (
+	// MaxFeeds is the maximum allowed number of feeds for a single user.
+	maxFeeds = 50
+
+	userKind = "User"
+)
 
 type UserInfo struct {
 	Feeds []*datastore.Key
@@ -104,5 +109,5 @@ func getUserInfo(c appengine.Context) (UserInfo, error) {
 // UserInfoKey returns the key for the current user's UserInfo.
 // This function assumes that a user is loged in, otherwise it will panic.
 func userInfoKey(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, "User", user.Current(c).String(), 0, nil)
+	return datastore.NewKey(c, userKind, user.Current(c).String(), 0, nil)
 }

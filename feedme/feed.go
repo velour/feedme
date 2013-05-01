@@ -5,13 +5,23 @@ import (
 	"appengine/datastore"
 	"appengine/urlfetch"
 	"html/template"
+	"sort"
 	"time"
 
 	rss "github.com/zippoxer/RSS-Go"
 )
 
-// maxCacheDuration is the length of time to store a feed before refetching it
-const maxCacheDuration = time.Minute * 30
+const (
+	// MaxCacheDuration is the length of time to store a feed before refetching it
+	maxCacheDuration = time.Minute * 30
+
+	// MaxNewArticles is the maximum number of articles stored when fetching
+	// new articles from a feed.
+	maxNewArticles = 10
+
+	articleKind = "Article"
+	feedKind    = "Feed"
+)
 
 // An Article is a single article from a feed.
 type Article struct {
@@ -75,7 +85,7 @@ func getFeedInfoByKey(c appengine.Context, key *datastore.Key) (FeedInfo, error)
 // to the store.
 func getFeedInfoByUrl(c appengine.Context, url string) (FeedInfo, error) {
 	var f FeedInfo
-	key := datastore.NewKey(c, "Feed", url, 0, nil)
+	key := datastore.NewKey(c, feedKind, url, 0, nil)
 
 	err := datastore.Get(c, key, &f)
 	if err != nil && err != datastore.ErrNoSuchEntity {
@@ -90,7 +100,7 @@ func getFeedInfoByUrl(c appengine.Context, url string) (FeedInfo, error) {
 // GetArticles gets all articles for a feed.
 func getArticles(c appengine.Context, feedKeys ...*datastore.Key) (articles Articles, err error) {
 	for _, f := range feedKeys {
-		if _, err = datastore.NewQuery("Article").Ancestor(f).GetAll(c, &articles); err != nil {
+		if _, err = datastore.NewQuery(articleKind).Ancestor(f).GetAll(c, &articles); err != nil {
 			break
 		}
 	}
@@ -105,8 +115,12 @@ func refreshFeed(c appengine.Context, url string) (FeedInfo, error) {
 	if err != nil {
 		return FeedInfo{}, err
 	}
+	sort.Sort(articles)
+	if len(articles) > maxNewArticles {
+		articles = articles[:maxNewArticles]
+	}
 
-	feedKey := datastore.NewKey(c, "Feed", url, 0, nil)
+	feedKey := datastore.NewKey(c, feedKind, url, 0, nil)
 
 	// Add a new FeedInfo or update the LastFetch time.
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
@@ -134,7 +148,7 @@ func refreshFeed(c appengine.Context, url string) (FeedInfo, error) {
 
 // RmArticles removes the articles associated with a feed.
 func rmArticles(c appengine.Context, feedKey *datastore.Key) error {
-	q := datastore.NewQuery("Article").Ancestor(feedKey).KeysOnly()
+	q := datastore.NewQuery(articleKind).Ancestor(feedKey).KeysOnly()
 	for it := q.Run(c); ; {
 		k, err := it.Next(nil)
 		switch {
@@ -152,7 +166,7 @@ func rmArticles(c appengine.Context, feedKey *datastore.Key) error {
 
 // UpdateArticles removes the old articles from the given feed and adds the new ones.
 func updateArticles(c appengine.Context, feedKey *datastore.Key, articles []Article) error {
-	q := datastore.NewQuery("Article").Ancestor(feedKey).KeysOnly()
+	q := datastore.NewQuery(articleKind).Ancestor(feedKey).KeysOnly()
 	stored := make(map[string]*datastore.Key)
 	for it := q.Run(c); ; {
 		k, err := it.Next(nil)
@@ -165,7 +179,7 @@ func updateArticles(c appengine.Context, feedKey *datastore.Key, articles []Arti
 	}
 
 	for _, a := range articles {
-		k := datastore.NewKey(c, "Article", a.Link, 0, feedKey)
+		k := datastore.NewKey(c, articleKind, a.Link, 0, feedKey)
 		id := k.StringID()
 		if _, ok := stored[id]; ok {
 			delete(stored, id)
