@@ -27,10 +27,15 @@ article.top {
 	border-top-width: 1px;
 }
 
+article span.error {
+	color: #FF0000;
+}
+
 article header {
 	background-color: #EAFFFF;
 	border-bottom-style: solid;
 	border-width: 1px;
+	padding-bottom: 2px; /* nearly (for some reason) article header span.box border size */
 	padding-top: 3px; /* article header span.box border size */
 }
 

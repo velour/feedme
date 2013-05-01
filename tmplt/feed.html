@@ -43,21 +43,36 @@ $(document).ready(function(){
 <h1>{{ .Title }}</h1>
 </header>
 
-{{ range $index, $elem := .Articles }}
-	<article{{ if not $index }} class="top"{{ end }}>
+{{ with .Errors }}
+	<article class="top">
 
+	<header>
+	<div>
+	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+	<h1><span class="error">Errors</span></h1>
+	</div>
+	</header>
+
+	<section class="description">
+	<ul>
+	{{ range . }}<li><span class="error">{{ .Error }}</span></li>{{ end }}
+	</ul>
+	</section>
+	</article>
+{{ end }}
+{{ if not .Errors | and .Articles }}	<article class="top">{{ else }}	<article>{{ end }}
+{{ range $index, $elem := .Articles }}
+	{{ if $index}}<article>{{ end }}
 	<header>
 	<div>
 	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
 	<h1><a href="{{ $elem.Link }}">{{ $elem.Title }}</a></h1>
 	</div>
-
 	<div class="meta">
 	<span class="origin">{{ $elem.OriginTitle }}</span>
 	<time datetime="{{ dateTime  $elem.When }}">{{  timeString $elem.When }}</time>
 	</div>
 	</header>
-
 	<section class="description">
 	{{ $elem.Description }}
 	</section>
