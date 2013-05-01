@@ -20,7 +20,8 @@ type UserInfo struct {
 
 // Subscribe adds a feed to the user's feed list if it is not already there.
 // The feed must already be in the datastore.
-func subscribe(c appengine.Context, feedKey *datastore.Key) error {
+func subscribe(c appengine.Context, title, url string) error {
+	key := datastore.NewKey(c, feedKind, url, 0, nil)
 	return datastore.RunInTransaction(c, func(c appengine.Context) error {
 		u, err := getUserInfo(c)
 		if err != nil {
@@ -32,22 +33,25 @@ func subscribe(c appengine.Context, feedKey *datastore.Key) error {
 		}
 
 		for _, k := range u.Feeds {
-			if feedKey.Equal(k) {
+			if key.Equal(k) {
 				return nil
 			}
 		}
 
 		var f FeedInfo
-		if err := datastore.Get(c, feedKey, &f); err != nil {
+		switch err := datastore.Get(c, key, &f); {
+		case err == datastore.ErrNoSuchEntity:
+			f = makeFeedInfo(title, url)
+		case err != nil:
 			return err
 		}
 
 		f.Refs++
-		if _, err := datastore.Put(c, feedKey, &f); err != nil {
+		if _, err := datastore.Put(c, key, &f); err != nil {
 			return err
 		}
 
-		u.Feeds = append(u.Feeds, feedKey)
+		u.Feeds = append(u.Feeds, key)
 		_, err = datastore.Put(c, userInfoKey(c), &u)
 		return err
 	}, &datastore.TransactionOptions{XG: true})
@@ -79,7 +83,7 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 
 		f.Refs--
 		if f.Refs <= 0 {
-			if err := rmArticles(c, feedKey); err != nil {
+			if err := f.rmArticles(c); err != nil {
 				return err
 			}
 			if err := datastore.Delete(c, feedKey); err != nil {

@@ -3,6 +3,7 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"fmt"
 	"html/template"
 	"net/http"
 	"sort"
@@ -99,25 +100,34 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 	var feedPage = struct {
 		Title    string
+		Errors   []error
 		Articles Articles
 	}{}
 
 	if r.URL.Path == "/" {
 		feedPage.Title = "All Feeds"
-		feedPage.Articles, err = allArticles(c, uinfo)
+		feedPage.Articles, feedPage.Errors = allArticles(c, uinfo)
 	} else {
-		feedPage.Title, feedPage.Articles, err = articlesForPath(c, r.URL.Path[1:])
+		var key *datastore.Key
+		var err error
+		if key, err = datastore.DecodeKey(r.URL.Path[1:]); err != nil {
+			http.NotFound(w, r)
+			return
+		}
+
+		var f FeedInfo
+		if err = datastore.Get(c, key, &f); err != nil {
+			feedPage.Errors = []error{err}
+		} else {
+			feedPage.Title = f.Title
+			feedPage.Articles, err = f.articles(c)
+			if err != nil {
+				feedPage.Errors = []error{err}
+			}
+		}
 	}
 
-	if err == datastore.ErrNoSuchEntity {
-		http.NotFound(w, r)
-		return
-	}
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
+	c.Debugf("%d articles\n", len(feedPage.Articles))
 	sort.Sort(feedPage.Articles)
 
 	if err := templates.ExecuteTemplate(w, "feed.html", feedPage); err != nil {
@@ -125,28 +135,23 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func allArticles(c appengine.Context, uinfo UserInfo) (Articles, error) {
-	// Refresh feeds if they need it…
-	for _, k := range uinfo.Feeds {
-		if _, err := getFeedInfoByKey(c, k); err != nil {
-			return nil, err
+func allArticles(c appengine.Context, uinfo UserInfo) (articles Articles, errs []error) {
+	for _, key := range uinfo.Feeds {
+		var f FeedInfo
+		if err := datastore.Get(c, key, &f); err != nil {
+			err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
+			errs = append(errs, err)
+			continue
 		}
+		as, err := f.articles(c)
+		if err != nil {
+			err = fmt.Errorf("%s: failed to read articles: %s", f.Url, err.Error())
+			errs = append(errs, err)
+			continue
+		}
+		articles = append(articles, as...)
 	}
-	return getArticles(c, uinfo.Feeds...)
-}
-
-func articlesForPath(c appengine.Context, path string) (string, Articles, error) {
-	var key *datastore.Key
-	var err error
-	if key, err = datastore.DecodeKey(path); err != nil {
-		return "", nil, err
-	}
-	var f FeedInfo
-	if f, err = getFeedInfoByKey(c, key); err != nil {
-		return "", nil, err
-	}
-	as, err := getArticles(c, key)
-	return f.Title, as, err
+	return
 }
 
 func handleAdd(w http.ResponseWriter, r *http.Request) {
@@ -159,12 +164,13 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 
 	// Check tha the feed is even valid, and put it in the datastore.
 	url := r.FormValue("url")
-	if _, err := getFeedInfoByUrl(c, url); err != nil {
+	title, err := checkUrl(c, url)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := subscribe(c, datastore.NewKey(c, feedKind, url, 0, nil)); err != nil {
+	if err := subscribe(c, title, url); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
