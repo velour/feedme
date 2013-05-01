@@ -64,43 +64,20 @@ type FeedInfo struct {
 	LastFetch time.Time
 }
 
-// GetFeedByKey loads a feed from the datastore with the given key.
-// If the Feed has not been fetched from the source within MaxCacheTime
-// then the Feed is read from it's source and added to the store.
-func getFeedInfoByKey(c appengine.Context, key *datastore.Key) (FeedInfo, error) {
-	var f FeedInfo
-	err := datastore.Get(c, key, &f)
-	if err != nil {
-		return FeedInfo{}, err
-	}
-	if time.Since(f.LastFetch) > maxCacheDuration {
-		f, err = refreshFeed(c, f.Url)
-	}
-	return f, err
+func makeFeedInfo(title, url string) FeedInfo {
+	return FeedInfo{Title: title, Url: url}
 }
 
-// GetFeedByUrl loads a feed from the datastore with the given URL.
-// If the Feed is not in the store or has not been fetched from the source
-// within MaxCacheTime then the Feed is read from it's source and added
-// to the store.
-func getFeedInfoByUrl(c appengine.Context, url string) (FeedInfo, error) {
-	var f FeedInfo
-	key := datastore.NewKey(c, feedKind, url, 0, nil)
-
-	err := datastore.Get(c, key, &f)
-	if err != nil && err != datastore.ErrNoSuchEntity {
-		return FeedInfo{}, err
-	}
-	if err == datastore.ErrNoSuchEntity || time.Since(f.LastFetch) > maxCacheDuration {
-		f, err = refreshFeed(c, url)
-	}
-	return f, err
-}
-
-// GetArticles gets all articles for a feed.
-func getArticles(c appengine.Context, feedKeys ...*datastore.Key) (articles Articles, err error) {
-	for _, f := range feedKeys {
-		if _, err = datastore.NewQuery(articleKind).Ancestor(f).GetAll(c, &articles); err != nil {
+// GetArticles returns all articles the feeds, refreshing them if necessary.
+func getArticles(c appengine.Context, feeds ...FeedInfo) (articles Articles, err error) {
+	for _, f := range feeds {
+		key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
+		if time.Since(f.LastFetch) > maxCacheDuration {
+			if err := refreshFeed(c, f); err != nil {
+				break
+			}
+		}
+		if _, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles); err != nil {
 			break
 		}
 	}
@@ -110,22 +87,22 @@ func getArticles(c appengine.Context, feedKeys ...*datastore.Key) (articles Arti
 // RefreshFeed fetches the feed from the remote source, stores it's info and articles in
 // the datastore, removes old articles (those not retrieved on the latest fetch), and
 // returns its FeedInfo.
-func refreshFeed(c appengine.Context, url string) (FeedInfo, error) {
-	feed, articles, err := fetchFeed(c, url)
+func refreshFeed(c appengine.Context, f FeedInfo) error {
+	feed, articles, err := fetchFeed(c, f.Url)
 	if err != nil {
-		return FeedInfo{}, err
+		return err
 	}
 	sort.Sort(articles)
 	if len(articles) > maxNewArticles {
 		articles = articles[:maxNewArticles]
 	}
 
-	feedKey := datastore.NewKey(c, feedKind, url, 0, nil)
+	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
 
 	// Add a new FeedInfo or update the LastFetch time.
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
 		var f FeedInfo
-		err := datastore.Get(c, feedKey, &f)
+		err := datastore.Get(c, key, &f)
 		if err == datastore.ErrNoSuchEntity {
 			err = nil
 			f = feed
@@ -134,16 +111,14 @@ func refreshFeed(c appengine.Context, url string) (FeedInfo, error) {
 			return err
 		}
 		feed.Refs = f.Refs
-		_, err = datastore.Put(c, feedKey, &feed)
+		_, err = datastore.Put(c, key, &feed)
 		return err
 	}, nil)
 	if err != nil {
-		return FeedInfo{}, err
+		return err
 	}
 
-	err = updateArticles(c, feedKey, articles)
-
-	return feed, err
+	return updateArticles(c, key, articles)
 }
 
 // RmArticles removes the articles associated with a feed.
@@ -228,4 +203,18 @@ func fetchFeed(c appengine.Context, url string) (FeedInfo, Articles, error) {
 	}
 
 	return finfo, as, nil
+}
+
+// CheckUrl returns the feed title and nil if the URL is a valid feed, otherwise it returns an error.
+func checkUrl(c appengine.Context, url string) (string, error) {
+	resp, err := urlfetch.Client(c).Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	f, err := rss.Get(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return f.Title, err
 }

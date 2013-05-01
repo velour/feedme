@@ -126,13 +126,11 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func allArticles(c appengine.Context, uinfo UserInfo) (Articles, error) {
-	// Refresh feeds if they need it…
-	for _, k := range uinfo.Feeds {
-		if _, err := getFeedInfoByKey(c, k); err != nil {
-			return nil, err
-		}
+	feeds := make([]FeedInfo, len(uinfo.Feeds))
+	if err := datastore.GetMulti(c, uinfo.Feeds, feeds); err != nil {
+		return nil, err
 	}
-	return getArticles(c, uinfo.Feeds...)
+	return getArticles(c, feeds...)
 }
 
 func articlesForPath(c appengine.Context, path string) (string, Articles, error) {
@@ -142,10 +140,10 @@ func articlesForPath(c appengine.Context, path string) (string, Articles, error)
 		return "", nil, err
 	}
 	var f FeedInfo
-	if f, err = getFeedInfoByKey(c, key); err != nil {
+	if err = datastore.Get(c, key, &f); err != nil {
 		return "", nil, err
 	}
-	as, err := getArticles(c, key)
+	as, err := getArticles(c, f)
 	return f.Title, as, err
 }
 
@@ -159,12 +157,13 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 
 	// Check tha the feed is even valid, and put it in the datastore.
 	url := r.FormValue("url")
-	if _, err := getFeedInfoByUrl(c, url); err != nil {
+	title, err := checkUrl(c, url)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := subscribe(c, datastore.NewKey(c, feedKind, url, 0, nil)); err != nil {
+	if err := subscribe(c, title, url); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
