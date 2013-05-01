@@ -126,11 +126,19 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 }
 
 func allArticles(c appengine.Context, uinfo UserInfo) (Articles, error) {
-	feeds := make([]FeedInfo, len(uinfo.Feeds))
-	if err := datastore.GetMulti(c, uinfo.Feeds, feeds); err != nil {
-		return nil, err
+	var articles Articles
+	for _, key := range uinfo.Feeds {
+		var f FeedInfo
+		if err := datastore.Get(c, key, &f); err != nil {
+			return articles, err
+		}
+		as, err := f.articles(c)
+		if err != nil {
+			return articles, err
+		}
+		articles = append(articles, as...)
 	}
-	return getArticles(c, feeds...)
+	return articles, nil
 }
 
 func articlesForPath(c appengine.Context, path string) (string, Articles, error) {
@@ -143,7 +151,7 @@ func articlesForPath(c appengine.Context, path string) (string, Articles, error)
 	if err = datastore.Get(c, key, &f); err != nil {
 		return "", nil, err
 	}
-	as, err := getArticles(c, f)
+	as, err := f.articles(c)
 	return f.Title, as, err
 }
 

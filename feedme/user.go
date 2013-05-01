@@ -83,7 +83,7 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 
 		f.Refs--
 		if f.Refs <= 0 {
-			if err := rmArticles(c, feedKey); err != nil {
+			if err := f.rmArticles(c); err != nil {
 				return err
 			}
 			if err := datastore.Delete(c, feedKey); err != nil {
