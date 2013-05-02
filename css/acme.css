@@ -32,13 +32,13 @@ article span.error {
 
 article header {
 	background-color: #EAFFFF;
-	border-bottom-style: solid;
-	border-bottom-width: 1px;
 	padding-bottom: 2px; /* nearly (for some reason) article header span.box border size */
 	padding-top: 3px; /* article header span.box border size */
 }
 
 article header + section {
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
 	border-color: rgb(136,137,199);
 }
 
