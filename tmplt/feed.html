@@ -19,11 +19,15 @@ var feedme = {
 
 $(document).ready(function(){
 	$("article header span.box").click(function(event){
-		var sect = $(event.target).closest("article").find("section.description");
+		var art = $(event.target).closest("article");
+		var head = art.find("header");
+		var sect = art.find("section.description");
 		if (sect.css("display") === "none") {
 			sect.show();
+			head.addClass("expanded");
 		} else {
 			sect.hide();
+			head.removeClass("expanded");
 		}
 	});
 });
@@ -44,7 +48,7 @@ $(document).ready(function(){
 </header>
 
 {{ with .Errors }}
-	<article class="top">
+	<article>
 
 	<header>
 	<div>
@@ -60,9 +64,8 @@ $(document).ready(function(){
 	</section>
 	</article>
 {{ end }}
-{{ if not .Errors | and .Articles }}	<article class="top">{{ else }}	<article>{{ end }}
 {{ range $index, $elem := .Articles }}
-	{{ if $index}}<article>{{ end }}
+	<article>
 	<header>
 	<div>
 	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>

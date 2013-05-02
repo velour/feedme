@@ -13,7 +13,7 @@
 </header>
 <div class="feeditem"><a href="/">All Feeds</a></div>
 <form action="/rm" method="post">
-{{ range $index, $elem := .Feeds }}
+{{ range .Feeds }}
 	<div class="feeditem">
 	<input type="checkbox" name="{{ .EncodedKey}}">
 	<a href="/{{ .EncodedKey }}">{{ .Title }}</a>
@@ -28,6 +28,9 @@
 </form>
 <form  action="/add" method="post">
 <input type="submit" value="subscribe"><input type="text" value="" name="url">
+</form>
+<form action="/addopml" method="post" enctype="multipart/form-data">
+<input type="submit" value="OPML Subscribe"><input type="file" name="opml">
 </form>
 
 </body>

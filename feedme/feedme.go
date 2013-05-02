@@ -3,6 +3,7 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"encoding/xml"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -27,6 +28,7 @@ var (
 func init() {
 	http.HandleFunc("/list", handleList)
 	http.HandleFunc("/add", handleAdd)
+	http.HandleFunc("/addopml", handleOpml)
 	http.HandleFunc("/rm", handleRm)
 	http.HandleFunc("/", handleRoot)
 }
@@ -176,6 +178,63 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/list", http.StatusFound)
+}
+
+type Outline struct {
+	XmlURL string `xml:"xmlUrl,attr"`
+	Outlines []*Outline `xml:"outline"`
+}
+
+func handleOpml(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.NotFound(w, r)
+		return
+	}
+
+	c := appengine.NewContext(r)
+
+	f, _, err := r.FormFile("opml")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var b struct { Body Outline `xml:"body"` }
+	err = xml.NewDecoder(f).Decode(&b)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	urls := opmlWalk(&b.Body, nil)
+
+	c.Debugf("Got %d URLs from OPML", len(urls))
+
+	for _, url := range urls {
+		c.Debugf("opml %s", url)
+		title, err := checkUrl(c, url)
+		if err != nil {
+			http.Error(w, "failed to check URL: " + err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err = subscribe(c, title, url); err != nil {
+			http.Error(w, "failed to subscribe: "+ err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	http.Redirect(w, r, "/list", http.StatusFound)
+}
+
+func opmlWalk(r *Outline, urls []string) []string {
+	if r.XmlURL != "" {
+		urls = append(urls, r.XmlURL)
+	}
+	for _, kid := range r.Outlines {
+		urls = append(urls, opmlWalk(kid, nil)...)
+	}
+	return urls
 }
 
 func handleRm(w http.ResponseWriter, r *http.Request) {
