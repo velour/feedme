@@ -37,6 +37,7 @@ article header {
 	border-width: 1px;
 	padding-bottom: 2px; /* nearly (for some reason) article header span.box border size */
 	padding-top: 3px; /* article header span.box border size */
+	border-color: rgb(136,137,199);
 }
 
 article header span.box {
