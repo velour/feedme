@@ -36,7 +36,7 @@ article header {
 	padding-top: 3px; /* article header span.box border size */
 }
 
-article header + section {
+article header.expanded {
 	border-bottom-style: solid;
 	border-bottom-width: 1px;
 	border-color: rgb(136,137,199);
