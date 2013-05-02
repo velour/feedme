@@ -44,7 +44,7 @@ $(document).ready(function(){
 </header>
 
 {{ with .Errors }}
-	<article class="top">
+	<article>
 
 	<header>
 	<div>
@@ -60,9 +60,8 @@ $(document).ready(function(){
 	</section>
 	</article>
 {{ end }}
-{{ if not .Errors | and .Articles }}	<article class="top">{{ else }}	<article>{{ end }}
 {{ range $index, $elem := .Articles }}
-	{{ if $index}}<article>{{ end }}
+	<article>
 	<header>
 	<div>
 	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
