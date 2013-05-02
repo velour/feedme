@@ -55,6 +55,11 @@ article header h1 {
 	text-transform: capitalize;
 }
 
+article header h1 a {
+	color: #000000;
+	text-decoration: none;
+}
+
 article header div.meta {
 	font-style: italic;
 	font-size: small;
