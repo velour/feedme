@@ -6,6 +6,13 @@ body {
 	font-size: 100%;
 }
 
+div#articles {
+	background-color: #ffffff;
+	border-style: solid;
+	border-width: 2px;
+	border-color: rgb(82,164,164);
+}
+
 header#top form {
 	float: right;
 }
@@ -18,8 +25,8 @@ article {
 	margin-top: 0;
 	margin-bottom: 0;
 	background-color: #FFFFEA;
-	border-style: solid solid solid solid;
-	border-width: 2px 2px 2px 2px;
+	border-style: solid none solid none;
+	border-width: 2px;
 }
 
 article + article {
