@@ -63,21 +63,19 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	infos := make([]FeedInfo, len(uinfo.Feeds))
+	err = datastore.GetMulti(c, uinfo.Feeds, infos)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	var feeds []userFeedInfo
-	for _, key := range uinfo.Feeds {
-		var feed FeedInfo
-		err := datastore.Get(c, key, &feed)
-		if err == datastore.ErrNoSuchEntity {
-			continue
-		}
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	for i := range infos {
 		feeds = append(feeds, userFeedInfo{
-			Title:      feed.Title,
-			LastFetch:  feed.LastFetch,
-			EncodedKey: key.Encode(),
+			Title:      infos[i].Title,
+			LastFetch:  infos[i].LastFetch,
+			EncodedKey: uinfo.Feeds[i].Encode(),
 		})
 	}
 
