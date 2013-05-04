@@ -205,7 +205,7 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 }
 
 type Outline struct {
-	XmlURL string `xml:"xmlUrl,attr"`
+	XmlURL   string     `xml:"xmlUrl,attr"`
 	Outlines []*Outline `xml:"outline"`
 }
 
@@ -223,7 +223,9 @@ func handleOpml(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var b struct { Body Outline `xml:"body"` }
+	var b struct {
+		Body Outline `xml:"body"`
+	}
 	err = xml.NewDecoder(f).Decode(&b)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -238,12 +240,12 @@ func handleOpml(w http.ResponseWriter, r *http.Request) {
 		c.Debugf("opml %s", url)
 		title, err := checkUrl(c, url)
 		if err != nil {
-			http.Error(w, "failed to check URL: " + err.Error(), http.StatusInternalServerError)
+			http.Error(w, "failed to check URL "+url+": "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		if err = subscribe(c, title, url); err != nil {
-			http.Error(w, "failed to subscribe: "+ err.Error(), http.StatusInternalServerError)
+			http.Error(w, "failed to subscribe "+url+": "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
