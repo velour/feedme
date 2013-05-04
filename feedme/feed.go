@@ -4,11 +4,11 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/urlfetch"
+	"fmt"
+	"github.com/velour/feedme/webfeed"
 	"html/template"
 	"sort"
 	"time"
-
-	rss "github.com/zippoxer/RSS-Go"
 )
 
 const (
@@ -185,8 +185,9 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 	}
 	defer resp.Body.Close()
 
-	feed, err := rss.Get(resp.Body)
+	feed, err := webfeed.Read(resp.Body)
 	if err != nil {
+		err = fmt.Errorf("failed to fetch %s: %s\n", url, err.Error())
 		return finfo, nil, err
 	}
 
@@ -194,14 +195,18 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 	finfo.Url = url
 	finfo.LastFetch = time.Now()
 
-	as := make(Articles, len(feed.Items))
-	for i, item := range feed.Items {
+	as := make(Articles, len(feed.Entries))
+	for i, ent := range feed.Entries {
+		content := ent.Content
+		if len(ent.Content) == 0 {
+			content = ent.Summary
+		}
 		as[i] = Article{
-			Title:           item.Title,
-			Link:            item.Link,
+			Title:           ent.Title,
+			Link:            ent.Link,
 			OriginTitle:     feed.Title,
-			DescriptionData: []byte(item.Description),
-			When:            item.When,
+			DescriptionData: content,
+			When:            ent.When,
 		}
 	}
 
@@ -215,7 +220,7 @@ func checkUrl(c appengine.Context, url string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	f, err := rss.Get(resp.Body)
+	f, err := webfeed.Read(resp.Body)
 	if err != nil {
 		return "", err
 	}
