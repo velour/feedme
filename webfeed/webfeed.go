@@ -170,5 +170,5 @@ type rssItem struct {
 }
 
 type rssContent struct {
-	Data []byte `xml:",innerxml"`
+	Data []byte `xml:",chardata"`
 }
