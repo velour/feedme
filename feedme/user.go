@@ -107,7 +107,7 @@ func getUserInfo(c appengine.Context) (UserInfo, error) {
 	if err != nil && err != datastore.ErrNoSuchEntity {
 		return UserInfo{}, err
 	}
-	return uinfo, err
+	return uinfo, nil
 }
 
 // UserInfoKey returns the key for the current user's UserInfo.
