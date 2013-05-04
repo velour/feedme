@@ -3,6 +3,7 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/user"
 	"encoding/xml"
 	"fmt"
 	"html/template"
@@ -121,8 +122,12 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		Title    string
 		Errors   []error
 		Articles Articles
-	}{
-		Logout: uinfo.Logout,
+	}{}
+
+	feedPage.Logout, err = user.LogoutURL(c, "/")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	if r.URL.Path == "/" {

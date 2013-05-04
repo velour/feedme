@@ -15,7 +15,6 @@ const (
 )
 
 type UserInfo struct {
-	Logout string `datastore:"-"`
 	Feeds []*datastore.Key
 }
 
@@ -108,7 +107,6 @@ func getUserInfo(c appengine.Context) (UserInfo, error) {
 	if err != nil && err != datastore.ErrNoSuchEntity {
 		return UserInfo{}, err
 	}
-	uinfo.Logout, err = user.LogoutURL(c, "/")
 	return uinfo, err
 }
 
