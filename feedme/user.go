@@ -15,7 +15,7 @@ const (
 )
 
 type UserInfo struct {
-	Feeds []*datastore.Key
+	Feeds []*datastore.Key `datastore:",noindex"`
 }
 
 // Subscribe adds a feed to the user's feed list if it is not already there.

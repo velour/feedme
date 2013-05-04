@@ -4,11 +4,11 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/urlfetch"
+	"errors"
+	"github.com/velour/feedme/webfeed"
 	"html/template"
 	"sort"
 	"time"
-
-	rss "github.com/zippoxer/RSS-Go"
 )
 
 const (
@@ -25,12 +25,12 @@ const (
 
 // An Article is a single article from a feed.
 type Article struct {
-	Title           string
-	Link            string
-	DescriptionData []byte
+	Title           string `datastore:",noindex"`
+	Link            string `datastore:",noindex"`
+	DescriptionData []byte `datastore:",noindex"`
 	When            time.Time
 	// OriginTitle is the title of the feed from which this article originated.
-	OriginTitle string
+	OriginTitle string `datastore:",noindex"`
 }
 
 func (a Article) Description() template.HTML {
@@ -54,14 +54,14 @@ func (as Articles) Swap(i, j int) {
 
 // FeedInfo is the information stored for each feed.
 type FeedInfo struct {
-	Title string
-	Url   string
+	Title string `datastore:",noindex"`
+	Url   string `datastore:",noindex"`
 
 	// Refs is the number of users currently subscribed to the feed.
-	Refs int
+	Refs int `datastore:",noindex"`
 
 	// LastFetch is the last time the feed was fetched from the source.
-	LastFetch time.Time
+	LastFetch time.Time `datastore:",noindex"`
 }
 
 // MakeFeedInfo returns a FeedInfo with the given title and URL.
@@ -88,6 +88,9 @@ func (f FeedInfo) refresh(c appengine.Context) error {
 	title, articles, err := f.readSource(c)
 	if err != nil {
 		return err
+	}
+	if title == "" {
+		title = f.Url
 	}
 
 	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
@@ -185,23 +188,47 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 	}
 	defer resp.Body.Close()
 
-	feed, err := rss.Get(resp.Body)
+	feed, err := webfeed.Read(resp.Body)
 	if err != nil {
-		return finfo, nil, err
+		if _, ok := err.(webfeed.ErrBadTime); ok {
+			c.Debugf("%s: %s", url, err.Error())
+			err = nil
+		} else {
+			err = errors.New("failed to fetch " + url + ": " + err.Error())
+			return finfo, nil, err
+		}
 	}
 
 	finfo.Title = feed.Title
+	if finfo.Title == "" {
+		finfo.Title = url
+	}
 	finfo.Url = url
 	finfo.LastFetch = time.Now()
 
-	as := make(Articles, len(feed.Items))
-	for i, item := range feed.Items {
+	as := make(Articles, len(feed.Entries))
+	for i, ent := range feed.Entries {
+		content := ent.Content
+		if len(ent.Content) == 0 {
+			content = ent.Summary
+		}
+		title := ent.Title
+		if title == "" && len(ent.Summary) > 0 {
+			n := len(ent.Summary)
+			if n > 20 {
+				n = 20
+			}
+			title = string(ent.Summary[:n]) + "…"
+		}
+		if title == "" {
+			title = ent.Link
+		}
 		as[i] = Article{
-			Title:           item.Title,
-			Link:            item.Link,
+			Title:           title,
+			Link:            ent.Link,
 			OriginTitle:     feed.Title,
-			DescriptionData: []byte(item.Description),
-			When:            item.When,
+			DescriptionData: content,
+			When:            ent.When,
 		}
 	}
 
@@ -215,9 +242,14 @@ func checkUrl(c appengine.Context, url string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	f, err := rss.Get(resp.Body)
+	f, err := webfeed.Read(resp.Body)
 	if err != nil {
-		return "", err
+		if _, ok := err.(webfeed.ErrBadTime); ok {
+			c.Debugf("%s: %s", url, err.Error())
+			err = nil
+		} else {
+			return "", err
+		}
 	}
 	return f.Title, err
 }
