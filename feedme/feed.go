@@ -4,7 +4,7 @@ import (
 	"appengine"
 	"appengine/datastore"
 	"appengine/urlfetch"
-	"fmt"
+	"errors"
 	"github.com/velour/feedme/webfeed"
 	"html/template"
 	"sort"
@@ -187,8 +187,13 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 
 	feed, err := webfeed.Read(resp.Body)
 	if err != nil {
-		err = fmt.Errorf("failed to fetch %s: %s\n", url, err.Error())
-		return finfo, nil, err
+		if _, ok := err.(webfeed.ErrBadTime); ok {
+			c.Debugf("%s: %s", url, err.Error())
+			err = nil
+		} else {
+			err = errors.New("failed to fetch " + url + ": " + err.Error())
+			return finfo, nil, err
+		}
 	}
 
 	finfo.Title = feed.Title
@@ -222,7 +227,12 @@ func checkUrl(c appengine.Context, url string) (string, error) {
 	defer resp.Body.Close()
 	f, err := webfeed.Read(resp.Body)
 	if err != nil {
-		return "", err
+		if _, ok := err.(webfeed.ErrBadTime); ok {
+			c.Debugf("%s: %s", url, err.Error())
+			err = nil
+		} else {
+			return "", err
+		}
 	}
 	return f.Title, err
 }

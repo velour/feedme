@@ -22,6 +22,10 @@ type Entry struct {
 }
 
 // Read reads a feed from an io.Reader and returns it or an error if one was encountered.
+//
+// RSS is like the wild west with respect to time. When reading RSS, this
+// function may return the non-fatal error ErrBadTime containing the
+// first unparsable time encountered.
 func Read(r io.Reader) (Feed, error) {
 	var f feed
 	if err := xml.NewDecoder(r).Decode(&f); err != nil {
@@ -33,11 +37,15 @@ func Read(r io.Reader) (Feed, error) {
 	return atomFeed(f)
 }
 
+// ErrBadTime is a string containing a time that was not parsable.
+type ErrBadTime string
+
+func (e ErrBadTime) Error() string {
+	return "Unable to parse time: " + string(e)
+}
+
 func rssFeed(r rss) (Feed, error) {
 	updated, err := rssTime(r.Updated)
-	if err != nil {
-		return Feed{}, err
-	}
 	f := Feed{
 		Title:   r.Title,
 		Link:    r.Link,
@@ -45,37 +53,44 @@ func rssFeed(r rss) (Feed, error) {
 	}
 
 	for _, it := range r.Items {
-		when, err := rssTime(it.Updated)
-		if err != nil {
-			return Feed{}, err
+		when, e := rssTime(it.Updated)
+		if err == nil && e != nil {
+			err = e
 		}
-		e := Entry{
+		ent := Entry{
 			Title:   it.Title,
 			Link:    it.Link,
 			Summary: it.Description,
 			Content: it.Content.Data,
 			When:    when,
 		}
-		f.Entries = append(f.Entries, e)
+		f.Entries = append(f.Entries, ent)
 	}
-	return f, nil
+	return f, err
 }
 
+// RssTimeFormats is a slice of various time formats encountered in the wild.
+var rssTimeFormats = []string{
+	"Mon, 2 Jan 2006 15:04:05 -0700",
+	"Mon, 2 Jan 2006 15:04:05 MST",
+	"Mon, 2 Jan 06 15:04:05 -0700",
+	"02 January 2006",
+}
+
+// RssTime tries parsing a string using a variety of different time formats.
+// If the string could not be parsed then the zero time is returned with an ErrBadTime error.
 func rssTime(s string) (time.Time, error) {
 	if s == "" {
 		return time.Time{}, nil
 	}
 
-	if t, err := time.Parse("Mon, 2 Jan 2006 15:04:05 -0700", s); err == nil {
-		return t, nil
+	for _, f := range rssTimeFormats {
+		if t, err := time.Parse(f, s); err == nil {
+			return t, nil
+		}
 	}
 
-	if t, err := time.Parse("Mon, 2 Jan 2006 15:04:05 MST", s); err == nil {
-		return t, nil
-	}
-
-	t, err := time.Parse("Mon, 2 Jan 06 15:04:05 -0700", s)
-	return t, err
+	return time.Time{}, ErrBadTime(s)
 }
 
 func atomFeed(a feed) (Feed, error) {
@@ -141,7 +156,7 @@ type rss struct {
 	// is apparently a different format from all of the rest of XML in all the land).  We
 	// read it as a string and parse it later.
 
-	Updated string `xml:"lastBuildDate"`
+	Updated string `xml:"pubDate"`
 }
 
 type rssItem struct {
