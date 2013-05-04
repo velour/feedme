@@ -89,6 +89,9 @@ func (f FeedInfo) refresh(c appengine.Context) error {
 	if err != nil {
 		return err
 	}
+	if title == "" {
+		title = f.Url
+	}
 
 	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
 	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
@@ -197,6 +200,9 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 	}
 
 	finfo.Title = feed.Title
+	if finfo.Title == "" {
+		finfo.Title = url
+	}
 	finfo.Url = url
 	finfo.LastFetch = time.Now()
 
@@ -206,8 +212,19 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 		if len(ent.Content) == 0 {
 			content = ent.Summary
 		}
+		title := ent.Title
+		if title == "" && len(ent.Summary) > 0 {
+			n := len(ent.Summary)
+			if n > 20 {
+				n = 20
+			}
+			title = string(ent.Summary[:n]) + "…"
+		}
+		if title == "" {
+			title = ent.Link
+		}
 		as[i] = Article{
-			Title:           ent.Title,
+			Title:           title,
 			Link:            ent.Link,
 			OriginTitle:     feed.Title,
 			DescriptionData: content,
