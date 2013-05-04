@@ -99,7 +99,7 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 	}, &datastore.TransactionOptions{XG: true})
 }
 
-// UserInfo returns the UserInfo for the currently logged in user.
+// getUserInfo returns the UserInfo for the currently logged in user.
 // This function assumes that a user is loged in, otherwise it will panic.
 func getUserInfo(c appengine.Context) (UserInfo, error) {
 	var uinfo UserInfo
@@ -107,7 +107,7 @@ func getUserInfo(c appengine.Context) (UserInfo, error) {
 	if err != nil && err != datastore.ErrNoSuchEntity {
 		return UserInfo{}, err
 	}
-	return uinfo, nil
+	return uinfo, err
 }
 
 // UserInfoKey returns the key for the current user's UserInfo.

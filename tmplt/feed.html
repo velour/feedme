@@ -38,8 +38,10 @@ $(document).ready(function(){
 </head>
 
 <body>
+<div id="articles">
 <header id="top">
 <nav>
+<a href="{{ .Logout }}">[logout]</a>
 <a href="/list">[manage feeds]</a>
 <a href="javascript:feedme.collapseAll()">[collapse all]</a>
 <a href="javascript:feedme.expandAll()">[expand all]</a>
@@ -81,6 +83,7 @@ $(document).ready(function(){
 	</section>
 	</article>
 {{end}}
+</div>
 </body>
 
 </html>

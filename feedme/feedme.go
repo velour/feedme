@@ -3,11 +3,13 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/user"
 	"encoding/xml"
 	"fmt"
 	"html/template"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -49,6 +51,21 @@ func (f userFeedInfo) Fresh() bool {
 	return time.Since(f.LastFetch) < maxCacheDuration
 }
 
+// userFeedInfos is a type for sorting the infos.
+type userFeedInfos []userFeedInfo
+
+func (u userFeedInfos) Len() int {
+	return len(u)
+}
+
+func (u userFeedInfos) Less(i, j int) bool {
+	return strings.ToLower(u[i].Title) < strings.ToLower(u[j].Title)
+}
+
+func (u userFeedInfos) Swap(i, j int) {
+	u[i], u[j] = u[j], u[i]
+}
+
 func handleList(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/list" || r.Method != "GET" {
 		http.NotFound(w, r)
@@ -63,23 +80,23 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var feeds []userFeedInfo
-	for _, key := range uinfo.Feeds {
-		var feed FeedInfo
-		err := datastore.Get(c, key, &feed)
-		if err == datastore.ErrNoSuchEntity {
-			continue
-		}
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	infos := make([]FeedInfo, len(uinfo.Feeds))
+	err = datastore.GetMulti(c, uinfo.Feeds, infos)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var feeds userFeedInfos
+	for i := range infos {
 		feeds = append(feeds, userFeedInfo{
-			Title:      feed.Title,
-			LastFetch:  feed.LastFetch,
-			EncodedKey: key.Encode(),
+			Title:      infos[i].Title,
+			LastFetch:  infos[i].LastFetch,
+			EncodedKey: uinfo.Feeds[i].Encode(),
 		})
 	}
+
+	sort.Sort(feeds)
 
 	if err := templates.ExecuteTemplate(w, "list.html", root{User: uinfo, Feeds: feeds}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -101,10 +118,17 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var feedPage = struct {
+		Logout string
 		Title    string
 		Errors   []error
 		Articles Articles
 	}{}
+
+	feedPage.Logout, err = user.LogoutURL(c, "/")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	if r.URL.Path == "/" {
 		feedPage.Title = "All Feeds"

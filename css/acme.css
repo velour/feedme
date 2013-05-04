@@ -1,9 +1,16 @@
 body {
-	background-color: #EEEEEE;
+	background-color: rgb(119,119,119);
 	max-width: 60em;
 	margin-left: auto;
 	margin-right: auto;
 	font-size: 100%;
+}
+
+div#articles {
+	background-color: #ffffff;
+	border-style: solid;
+	border-width: 2px;
+	border-color: rgb(82,164,164);
 }
 
 header#top form {
@@ -18,8 +25,8 @@ article {
 	margin-top: 0;
 	margin-bottom: 0;
 	background-color: #FFFFEA;
-	border-style: solid solid solid solid;
-	border-width: 2px 2px 2px 2px;
+	border-style: solid none solid none;
+	border-width: 2px;
 }
 
 article + article {
