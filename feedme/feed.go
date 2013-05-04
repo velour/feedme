@@ -25,12 +25,12 @@ const (
 
 // An Article is a single article from a feed.
 type Article struct {
-	Title           string
-	Link            string
-	DescriptionData []byte
+	Title           string `datastore:",noindex"`
+	Link            string `datastore:",noindex"`
+	DescriptionData []byte `datastore:",noindex"`
 	When            time.Time
 	// OriginTitle is the title of the feed from which this article originated.
-	OriginTitle string
+	OriginTitle string `datastore:",noindex"`
 }
 
 func (a Article) Description() template.HTML {
@@ -54,14 +54,14 @@ func (as Articles) Swap(i, j int) {
 
 // FeedInfo is the information stored for each feed.
 type FeedInfo struct {
-	Title string
-	Url   string
+	Title string `datastore:",noindex"`
+	Url   string `datastore:",noindex"`
 
 	// Refs is the number of users currently subscribed to the feed.
-	Refs int
+	Refs int `datastore:",noindex"`
 
 	// LastFetch is the last time the feed was fetched from the source.
-	LastFetch time.Time
+	LastFetch time.Time `datastore:",noindex"`
 }
 
 // MakeFeedInfo returns a FeedInfo with the given title and URL.

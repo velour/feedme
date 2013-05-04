@@ -118,7 +118,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var feedPage = struct {
-		Logout string
+		Logout   string
 		Title    string
 		Errors   []error
 		Articles Articles
