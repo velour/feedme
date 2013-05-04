@@ -108,7 +108,7 @@ func atomFeed(a feed) (Feed, error) {
 			When:    ent.Updated,
 		}
 		if len(ent.Content) > 0 {
-			e.Content = ent.Content[0].Data
+			e.Content = []byte(ent.Content[0])
 		}
 		f.Entries = append(f.Entries, e)
 	}
@@ -129,21 +129,17 @@ type feed struct {
 }
 
 type atomEntry struct {
-	Title   string        `xml:"title"`
-	Link    atomLink      `xml:"link"`
-	Id      string        `xml:"id"`
-	Updated time.Time     `xml:"updated"`
-	Author  []string      `xml:"author>name"`
-	Summary []byte        `xml:"summary"`
-	Content []atomContent `xml:"content"`
+	Title   string    `xml:"title"`
+	Link    atomLink  `xml:"link"`
+	Id      string    `xml:"id"`
+	Updated time.Time `xml:"updated"`
+	Author  []string  `xml:"author>name"`
+	Summary []byte    `xml:"summary"`
+	Content [][]byte  `xml:"content"`
 }
 
 type atomLink struct {
 	Href string `xml:"href,attr"`
-}
-
-type atomContent struct {
-	Data []byte `xml:",innerxml"`
 }
 
 type rss struct {
