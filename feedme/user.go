@@ -41,7 +41,7 @@ func subscribe(c appengine.Context, title, url string) error {
 		var f FeedInfo
 		switch err := datastore.Get(c, key, &f); {
 		case err == datastore.ErrNoSuchEntity:
-			f = makeFeedInfo(title, url)
+			f = FeedInfo{Url: url, Title: title}
 		case err != nil:
 			return err
 		}

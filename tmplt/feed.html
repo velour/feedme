@@ -46,7 +46,11 @@ $(document).ready(function(){
 <a href="javascript:feedme.collapseAll()">[collapse all]</a>
 <a href="javascript:feedme.expandAll()">[expand all]</a>
 </nav>
+{{ if .Link }}
+<h1><a href="{{ .Link }}">{{ .Title }}</a></h1>
+{{ else }}
 <h1>{{ .Title }}</h1>
+{{ end }}
 </header>
 
 {{ with .Errors }}
