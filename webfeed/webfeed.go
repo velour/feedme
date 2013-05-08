@@ -1,9 +1,12 @@
 package webfeed
 
 import (
+	"bytes"
 	"encoding/xml"
 	"io"
 	"time"
+
+	"code.google.com/p/go.net/html"
 )
 
 type Feed struct {
@@ -14,9 +17,11 @@ type Feed struct {
 }
 
 type Entry struct {
-	Title   string
-	Link    string
+	Title string
+	Link  string
+	// Summary is a valid HTML or escaped HTML summary of the entry.
 	Summary []byte
+	// Contents is the main contents of the entry in valid HTML or escaped HTML.
 	Content []byte
 	When    time.Time
 }
@@ -60,8 +65,8 @@ func rssFeed(r rss) (Feed, error) {
 		ent := Entry{
 			Title:   it.Title,
 			Link:    it.Link,
-			Summary: it.Description,
-			Content: it.Content.Data,
+			Summary: fixHtml(it.Description),
+			Content: fixHtml(it.Content.Data),
 			When:    when,
 		}
 		f.Entries = append(f.Entries, ent)
@@ -104,11 +109,11 @@ func atomFeed(a feed) (Feed, error) {
 		e := Entry{
 			Title:   ent.Title,
 			Link:    ent.Link.Href,
-			Summary: ent.Summary,
+			Summary: fixHtml(ent.Summary),
 			When:    ent.Updated,
 		}
 		if len(ent.Content) > 0 {
-			e.Content = []byte(ent.Content[0])
+			e.Content = fixHtml(ent.Content[0].Data())
 		}
 		f.Entries = append(f.Entries, e)
 	}
@@ -129,17 +134,30 @@ type feed struct {
 }
 
 type atomEntry struct {
-	Title   string    `xml:"title"`
-	Link    atomLink  `xml:"link"`
-	Id      string    `xml:"id"`
-	Updated time.Time `xml:"updated"`
-	Author  []string  `xml:"author>name"`
-	Summary []byte    `xml:"summary"`
-	Content [][]byte  `xml:"content"`
+	Title   string        `xml:"title"`
+	Link    atomLink      `xml:"link"`
+	Id      string        `xml:"id"`
+	Updated time.Time     `xml:"updated"`
+	Author  []string      `xml:"author>name"`
+	Summary []byte        `xml:"summary"`
+	Content []atomContent `xml:"content"`
 }
 
 type atomLink struct {
 	Href string `xml:"href,attr"`
+}
+
+type atomContent struct {
+	Type     string `xml:"type,attr"`
+	Contents []byte `xml:",innerxml"`
+}
+
+func (c atomContent) Data() []byte {
+	unesc := c.Contents
+	if c.Type != "xhtml" {
+		unesc = []byte(html.UnescapeString(string(c.Contents)))
+	}
+	return unesc
 }
 
 type rss struct {
@@ -167,4 +185,40 @@ type rssItem struct {
 
 type rssContent struct {
 	Data []byte `xml:",chardata"`
+}
+
+// FixHtml parses bytes as HTML and returns well-formed HTML if the parse
+// was successful, or escaped HTML, if not.
+func fixHtml(wild []byte) (well []byte) {
+	n, err := html.Parse(bytes.NewReader(wild))
+	if err != nil {
+		return []byte(html.EscapeString(string(wild)))
+	}
+
+	defer func() {
+		if err := recover(); err == bytes.ErrTooLarge {
+			well = []byte(html.EscapeString(string(wild)))
+		} else if err != nil {
+			panic(err)
+		}
+	}()
+	buf := bytes.NewBuffer(make([]byte, 0, len(wild)*2))
+	if err := html.Render(buf, n); err != nil {
+		return []byte(html.EscapeString(string(wild)))
+	}
+
+	well = buf.Bytes()
+	openBody := []byte("<body>")
+	i := bytes.Index(well, openBody)
+	if i < 0 {
+		return []byte(html.EscapeString(string(wild)))
+	}
+	well = well[i+len(openBody):]
+
+	closeBody := []byte("</body>")
+	i = bytes.Index(well, closeBody)
+	if i < 0 {
+		return []byte(html.EscapeString(string(wild)))
+	}
+	return well[:i]
 }
