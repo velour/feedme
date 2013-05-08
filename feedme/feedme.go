@@ -203,13 +203,13 @@ func handleAdd(w http.ResponseWriter, r *http.Request) {
 
 	// Check tha the feed is even valid, and put it in the datastore.
 	url := r.FormValue("url")
-	title, err := checkUrl(c, url)
+	f, err := checkUrl(c, url)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := subscribe(c, title, url); err != nil {
+	if err := subscribe(c, f); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -251,13 +251,13 @@ func handleOpml(w http.ResponseWriter, r *http.Request) {
 
 	for _, url := range urls {
 		c.Debugf("opml %s", url)
-		title, err := checkUrl(c, url)
+		f, err := checkUrl(c, url)
 		if err != nil {
 			http.Error(w, "failed to check URL "+url+": "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		if err = subscribe(c, title, url); err != nil {
+		if err = subscribe(c, f); err != nil {
 			http.Error(w, "failed to subscribe "+url+": "+err.Error(), http.StatusInternalServerError)
 			return
 		}
