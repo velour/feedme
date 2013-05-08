@@ -53,7 +53,7 @@ func rssFeed(r rss) (Feed, error) {
 	updated, err := rssTime(r.Updated)
 	f := Feed{
 		Title:   r.Title,
-		Link:    r.Link,
+		Link:    r.link(),
 		Updated: updated,
 	}
 
@@ -172,7 +172,7 @@ func (c atomContent) Data() []byte {
 
 type rss struct {
 	Title       string    `xml:"title"`
-	Link        string    `xml:"link"`
+	Links       []string  `xml:"link"`
 	Description []byte    `xml:"description"`
 	Items       []rssItem `xml:"item"`
 
@@ -181,6 +181,15 @@ type rss struct {
 	// read it as a string and parse it later.
 
 	Updated string `xml:"pubDate"`
+}
+
+func (r rss) link() string {
+	for _, l := range r.Links {
+		if l != "" {
+			return l
+		}
+	}
+	return ""
 }
 
 type rssItem struct {
