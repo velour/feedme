@@ -54,8 +54,11 @@ func (as Articles) Swap(i, j int) {
 
 // FeedInfo is the information stored for each feed.
 type FeedInfo struct {
+	// The URL from which to fetch the Atom or RSS.
+	Url string `datastore:",noindex"`
+
 	Title string `datastore:",noindex"`
-	Url   string `datastore:",noindex"`
+	Link  string `datastore:",noindex"`
 
 	// Refs is the number of users currently subscribed to the feed.
 	Refs int `datastore:",noindex"`
@@ -64,33 +67,30 @@ type FeedInfo struct {
 	LastFetch time.Time `datastore:",noindex"`
 }
 
-// MakeFeedInfo returns a FeedInfo with the given title and URL.
-func makeFeedInfo(title, url string) FeedInfo {
-	return FeedInfo{Title: title, Url: url}
-}
-
 // GetArticles returns all articles for a feed, refreshing it if necessary.
 func (f FeedInfo) articles(c appengine.Context) (articles Articles, err error) {
 	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-	if time.Since(f.LastFetch) > maxCacheDuration {
-		if err = f.refresh(c); err != nil {
-			return
-		}
-	}
 	_, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles)
 	return
 }
 
-// RefreshFeed fetches the feed from the remote source, stores it's info and articles in
-// the datastore, removes old articles (those not retrieved on the latest fetch), and
-// returns its FeedInfo.
-func (f FeedInfo) refresh(c appengine.Context) error {
-	title, articles, err := f.readSource(c)
+// EnsureFresh refreshes the feed only if it is stale.
+func (f *FeedInfo) ensureFresh(c appengine.Context) error {
+	if time.Since(f.LastFetch) > maxCacheDuration {
+		return f.refresh(c)
+	}
+	return nil
+}
+
+// RefreshFeed fetches and updates a feed from the remote source,
+// stores it's info and articles in the datastore, and removes old articles
+// (those not retrieved on the latest fetch).
+func (f *FeedInfo) refresh(c appengine.Context) error {
+	var articles Articles
+	var err error
+	*f, articles, err = f.readSource(c)
 	if err != nil {
 		return err
-	}
-	if title == "" {
-		title = f.Url
 	}
 
 	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
@@ -100,10 +100,8 @@ func (f FeedInfo) refresh(c appengine.Context) error {
 		if err != nil && err != datastore.ErrNoSuchEntity {
 			return err
 		}
-		f.Title = title
 		f.Refs = stored.Refs
-		f.LastFetch = time.Now()
-		_, err = datastore.Put(c, key, &f)
+		_, err = datastore.Put(c, key, f)
 		return err
 	}, nil)
 	if err != nil {
@@ -114,16 +112,16 @@ func (f FeedInfo) refresh(c appengine.Context) error {
 }
 
 // ReadSource returns the feed title and articles read from the source.
-func (f FeedInfo) readSource(c appengine.Context) (string, Articles, error) {
+func (f FeedInfo) readSource(c appengine.Context) (FeedInfo, Articles, error) {
 	feed, articles, err := fetchUrl(c, f.Url)
 	if err != nil {
-		return "", nil, err
+		return FeedInfo{}, nil, err
 	}
 	sort.Sort(articles)
 	if len(articles) > maxNewArticles {
 		articles = articles[:maxNewArticles]
 	}
-	return feed.Title, articles, nil
+	return feed, articles, nil
 }
 
 func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
@@ -199,11 +197,12 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 		}
 	}
 
+	finfo.Url = url
 	finfo.Title = feed.Title
 	if finfo.Title == "" {
 		finfo.Title = url
 	}
-	finfo.Url = url
+	finfo.Link = feed.Link
 	finfo.LastFetch = time.Now()
 
 	as := make(Articles, len(feed.Entries))

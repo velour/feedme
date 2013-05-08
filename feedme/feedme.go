@@ -120,6 +120,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	var feedPage = struct {
 		Logout   string
 		Title    string
+		Link     string
 		Errors   []error
 		Articles Articles
 	}{}
@@ -143,9 +144,16 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 
 		var f FeedInfo
 		if err = datastore.Get(c, key, &f); err != nil {
+			err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
 			feedPage.Errors = []error{err}
+
+		} else if err := f.ensureFresh(c); err != nil {
+			err = fmt.Errorf("%s: failed to refresh: %s", f.Url, err.Error())
+			feedPage.Errors = []error{err}
+
 		} else {
 			feedPage.Title = f.Title
+			feedPage.Link = f.Link
 			feedPage.Articles, err = f.articles(c)
 			if err != nil {
 				feedPage.Errors = []error{err}
@@ -166,6 +174,11 @@ func allArticles(c appengine.Context, uinfo UserInfo) (articles Articles, errs [
 		var f FeedInfo
 		if err := datastore.Get(c, key, &f); err != nil {
 			err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
+			errs = append(errs, err)
+			continue
+		}
+		if err := f.ensureFresh(c); err != nil {
+			err = fmt.Errorf("%s: failed to refresh: %s", f.Url, err.Error())
 			errs = append(errs, err)
 			continue
 		}
