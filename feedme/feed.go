@@ -234,11 +234,12 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 	return finfo, as, nil
 }
 
-// CheckUrl returns the feed title and nil if the URL is a valid feed, otherwise it returns an error.
-func checkUrl(c appengine.Context, url string) (string, error) {
+// CheckUrl returns information about a feed and nil if the URL is a
+// valid feed, otherwise it returns an error.
+func checkUrl(c appengine.Context, url string) (FeedInfo, error) {
 	resp, err := urlfetch.Client(c).Get(url)
 	if err != nil {
-		return "", err
+		return FeedInfo{}, err
 	}
 	defer resp.Body.Close()
 	f, err := webfeed.Read(resp.Body)
@@ -247,8 +248,8 @@ func checkUrl(c appengine.Context, url string) (string, error) {
 			c.Debugf("%s: %s", url, err.Error())
 			err = nil
 		} else {
-			return "", err
+			return FeedInfo{}, err
 		}
 	}
-	return f.Title, err
+	return FeedInfo{Url: url, Title: f.Title, Link: f.Link}, err
 }

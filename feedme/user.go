@@ -19,9 +19,8 @@ type UserInfo struct {
 }
 
 // Subscribe adds a feed to the user's feed list if it is not already there.
-// The feed must already be in the datastore.
-func subscribe(c appengine.Context, title, url string) error {
-	key := datastore.NewKey(c, feedKind, url, 0, nil)
+func subscribe(c appengine.Context, f FeedInfo) error {
+	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
 	return datastore.RunInTransaction(c, func(c appengine.Context) error {
 		u, err := getUserInfo(c)
 		if err != nil {
@@ -38,11 +37,7 @@ func subscribe(c appengine.Context, title, url string) error {
 			}
 		}
 
-		var f FeedInfo
-		switch err := datastore.Get(c, key, &f); {
-		case err == datastore.ErrNoSuchEntity:
-			f = FeedInfo{Url: url, Title: title}
-		case err != nil:
+		if err := datastore.Get(c, key, &f); err != nil && err != datastore.ErrNoSuchEntity {
 			return err
 		}
 
