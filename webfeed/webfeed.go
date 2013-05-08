@@ -101,7 +101,7 @@ func rssTime(s string) (time.Time, error) {
 func atomFeed(a feed) (Feed, error) {
 	f := Feed{
 		Title:   a.Title,
-		Link:    a.Link.Href,
+		Link:    a.link(),
 		Updated: a.Updated,
 	}
 
@@ -125,12 +125,21 @@ func atomFeed(a feed) (Feed, error) {
 // this information is moved into a more "clean" format: the exported Feed.
 type feed struct {
 	Title   string      `xml:"title"`
-	Link    atomLink    `xml:"link"`
+	Links   []atomLink  `xml:"link"`
 	Updated time.Time   `xml:"updated"`
 	Author  []string    `xml:"author>name"`
 	Id      string      `xml:"id"`
 	Entries []atomEntry `xml:"entry"`
 	Rss     rss         `xml:"channel"`
+}
+
+func (f *feed) link() string {
+	for _, l := range f.Links {
+		if l.Rel == "" || l.Rel == "alternate" {
+			return l.Href
+		}
+	}
+	return ""
 }
 
 type atomEntry struct {
@@ -144,6 +153,7 @@ type atomEntry struct {
 }
 
 type atomLink struct {
+	Rel  string `xml:"rel,attr"`
 	Href string `xml:"href,attr"`
 }
 
