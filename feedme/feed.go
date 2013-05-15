@@ -93,23 +93,28 @@ func (f *FeedInfo) ensureFresh(c appengine.Context) error {
 // stores it's info and articles in the datastore, and removes old articles
 // (those not retrieved on the latest fetch).
 func (f *FeedInfo) refresh(c appengine.Context) error {
-	fnew, articles, err := f.readSource(c)
-	if err != nil {
-		return err
-	}
-	*f = fnew
+	fnew, articles, fetchErr := f.readSource(c)
 
-	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
+	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
 		var stored FeedInfo
+		key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
 		err := datastore.Get(c, key, &stored)
 		if err != nil && err != datastore.ErrNoSuchEntity {
 			return err
+		}
+		if fetchErr != nil {
+			*f = stored
+			f.LastFetch = time.Now()
+		} else {
+			*f = fnew
 		}
 		f.Refs = stored.Refs
 		_, err = datastore.Put(c, key, f)
 		return err
 	}, nil)
+	if fetchErr != nil {
+		return fetchErr
+	}
 	if err != nil {
 		return err
 	}
