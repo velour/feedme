@@ -47,6 +47,7 @@
 		</div>
 
 		<div class="winbody">
+		{{ .Url }}<br>
 		{{ if .Fresh }}
 		Last Fetched: <time datetime="{{ dateTime .LastFetch }}"></time>
 		{{ end }}
