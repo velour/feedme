@@ -39,35 +39,28 @@ func init() {
 	http.HandleFunc("/", handleRoot)
 }
 
-type root struct {
-	User   UserInfo
-	Logout string
-	Feeds  []userFeedInfo
-}
-
-// FeedInfo is the information about a feed in the user's feed list.
-type userFeedInfo struct {
+type feedListEntry struct {
 	Title      string
 	LastFetch  time.Time
 	EncodedKey string
 }
 
-func (f userFeedInfo) Fresh() bool {
+func (f feedListEntry) Fresh() bool {
 	return time.Since(f.LastFetch) < maxCacheDuration
 }
 
-// userFeedInfos is a type for sorting the infos.
-type userFeedInfos []userFeedInfo
+// feedListEntrys is a type for sorting the infos.
+type feedList []feedListEntry
 
-func (u userFeedInfos) Len() int {
+func (u feedList) Len() int {
 	return len(u)
 }
 
-func (u userFeedInfos) Less(i, j int) bool {
+func (u feedList) Less(i, j int) bool {
 	return strings.ToLower(u[i].Title) < strings.ToLower(u[j].Title)
 }
 
-func (u userFeedInfos) Swap(i, j int) {
+func (u feedList) Swap(i, j int) {
 	u[i], u[j] = u[j], u[i]
 }
 
@@ -79,38 +72,42 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 
 	c := appengine.NewContext(r)
 
-	uinfo, err := getUserInfo(c)
+	var page struct {
+		User   UserInfo
+		Logout string
+		Feeds  feedList
+	}
+
+	var err error
+	page.User, err = getUserInfo(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	infos := make([]FeedInfo, len(uinfo.Feeds))
-	err = datastore.GetMulti(c, uinfo.Feeds, infos)
-	if err != nil {
+	infos := make([]FeedInfo, len(page.User.Feeds))
+	if err = datastore.GetMulti(c, page.User.Feeds, infos); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	var feeds userFeedInfos
 	for i := range infos {
-		feeds = append(feeds, userFeedInfo{
+		page.Feeds = append(page.Feeds, feedListEntry{
 			Title:      infos[i].Title,
 			LastFetch:  infos[i].LastFetch,
-			EncodedKey: uinfo.Feeds[i].Encode(),
+			EncodedKey: page.User.Feeds[i].Encode(),
 		})
 	}
 
-	sort.Sort(feeds)
+	sort.Sort(page.Feeds)
 
-	var logout string
-	logout, err = user.LogoutURL(c, "/")
+	page.Logout, err = user.LogoutURL(c, "/")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := templates.ExecuteTemplate(w, "list.html", root{User: uinfo, Logout: logout, Feeds: feeds}); err != nil {
+	if err := templates.ExecuteTemplate(w, "list.html", page); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
