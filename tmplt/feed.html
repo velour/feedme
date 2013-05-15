@@ -41,7 +41,8 @@
 	</article>
 {{ end }}
 {{ range $index, $elem := .Articles }}
-	<article>
+	<!-- Don't display articles until the page is ready and we compute their local times -->
+	<article style="display: none">
 	<header>
 	<div>
 	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
@@ -49,7 +50,7 @@
 	</div>
 	<div class="meta">
 	<span class="origin">{{ $elem.OriginTitle }}</span>
-	<time datetime="{{ dateTime  $elem.When }}">{{  timeString $elem.When }}</time>
+	<time datetime="{{ dateTime  $elem.When }}"></time>
 	</div>
 	</header>
 	<section class="description">
@@ -60,6 +61,7 @@
 </div>
 
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://raw.github.com/timrwood/moment/2.0.0/min/moment.min.js"></script>
 
 <script type="text/javascript">
 var feedme = {
@@ -73,6 +75,11 @@ var feedme = {
 }
 
 $(document).ready(function(){
+	$("time").each(function(i, elm){
+		var utc = moment.utc($(elm).attr('datetime'));
+		$(elm).html(utc.local().format('LLLL'));
+		$(elm).closest("article").show();
+	});
 	$("article header span.box").click(function(event){
 		var art = $(event.target).closest("article");
 		var head = art.find("header");
@@ -84,7 +91,7 @@ $(document).ready(function(){
 			sect.hide();
 			head.removeClass("expanded");
 		}
-	});
+	})
 });
 </script>
 

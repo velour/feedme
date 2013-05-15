@@ -20,7 +20,7 @@
 	<a href="/{{ .EncodedKey }}">{{ .Title }}</a>
 	<span class="whenfetched">
 	{{ if .Fresh }}
-	(Last Fetched: <time datetime="{{ dateTime .LastFetch }}">{{ timeString .LastFetch }}</time>)
+	(Last Fetched: <time datetime="{{ dateTime .LastFetch }}"></time>)
 	{{ end }}
 	</span>
 	</div>
@@ -35,6 +35,19 @@
 </form>
 
 </div>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://raw.github.com/timrwood/moment/2.0.0/min/moment.min.js"></script>
+
+<script type="text/javascript">
+$(document).ready(function(){
+	$("time").each(function(i, elm){
+		var utc = moment.utc($(elm).attr('datetime'));
+		console.log(i + " " + $(elm).attr('datetime') + " " + utc + " " + utc.format('LLLL'));
+		$(elm).html(utc.local().format('LLLL'));
+	});
+});
+</script>
 </body>
 
 </html>

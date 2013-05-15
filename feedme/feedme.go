@@ -20,8 +20,7 @@ var (
 	}
 
 	funcs = template.FuncMap{
-		"dateTime":   func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
-		"timeString": func(t time.Time) string { return t.Format("Mon Jan 2 15:04:05 MST 2006") },
+		"dateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
 	}
 
 	templates = template.Must(template.New("t").Funcs(funcs).ParseFiles(templateFiles...))
