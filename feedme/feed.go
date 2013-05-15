@@ -8,6 +8,7 @@ import (
 	"github.com/velour/feedme/webfeed"
 	"html/template"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -35,6 +36,12 @@ type Article struct {
 
 func (a Article) Description() template.HTML {
 	return template.HTML(a.DescriptionData)
+}
+
+// StringID returns a unique string that can be used to identify this
+// article in a datastore.Key.
+func (a Article) StringID() string {
+	return a.Title + strconv.FormatInt(a.When.UnixNano(), 10)
 }
 
 // Articles is a slice of Articles implementing sort.Interface.
@@ -68,9 +75,13 @@ type FeedInfo struct {
 }
 
 // GetArticles returns all articles for a feed, refreshing it if necessary.
-func (f FeedInfo) articles(c appengine.Context) (articles Articles, err error) {
+func (f FeedInfo) articlesSince(c appengine.Context, t time.Time) (articles Articles, err error) {
 	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-	_, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles)
+	if t.IsZero() {
+		_, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles)
+	} else {
+		_, err = datastore.NewQuery(articleKind).Ancestor(key).Filter("When >=", t).GetAll(c, &articles)
+	}
 	return
 }
 
@@ -86,23 +97,28 @@ func (f *FeedInfo) ensureFresh(c appengine.Context) error {
 // stores it's info and articles in the datastore, and removes old articles
 // (those not retrieved on the latest fetch).
 func (f *FeedInfo) refresh(c appengine.Context) error {
-	fnew, articles, err := f.readSource(c)
-	if err != nil {
-		return err
-	}
-	*f = fnew
+	fnew, articles, fetchErr := f.readSource(c)
 
-	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-	err = datastore.RunInTransaction(c, func(c appengine.Context) error {
+	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
 		var stored FeedInfo
+		key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
 		err := datastore.Get(c, key, &stored)
 		if err != nil && err != datastore.ErrNoSuchEntity {
 			return err
+		}
+		if fetchErr != nil {
+			*f = stored
+			f.LastFetch = time.Now()
+		} else {
+			*f = fnew
 		}
 		f.Refs = stored.Refs
 		_, err = datastore.Put(c, key, f)
 		return err
 	}, nil)
+	if fetchErr != nil {
+		return fetchErr
+	}
 	if err != nil {
 		return err
 	}
@@ -138,7 +154,7 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 	}
 
 	for _, a := range articles {
-		k := datastore.NewKey(c, articleKind, a.Link, 0, key)
+		k := datastore.NewKey(c, articleKind, a.StringID(), 0, key)
 		id := k.StringID()
 		if _, ok := stored[id]; ok {
 			delete(stored, id)
