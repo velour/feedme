@@ -9,46 +9,49 @@
 
 <body>
 <div id="maindiv">
-<header id="top">
-<h1>Feeds</h1>
-</header>
-<div class="feeditem"><a href="/">Latest Articles</a></div>
-<div class="feeditem"><a href="/all">All Articles</a></div>
-<form action="/rm" method="post">
+	<header id="top">
+		<nav>
+		<a href="{{ .Logout }}">[logout]</a>
+		<a href="/">[latest]</a>
+		<a href="/all">[all]</a>
+		<a href="javascript:feedme.collapseAll()">[collapse all]</a>
+		<a href="javascript:feedme.expandAll()">[expand all]</a>
+		</nav>
+		<h1>Feeds</h1>
+	</header>
+
+	<form action="/rm" method="post">
+
 {{ range .Feeds }}
-	<div class="feeditem">
-	<input type="checkbox" name="{{ .EncodedKey}}">
-	<a href="/{{ .EncodedKey }}">{{ .Title }}</a>
-	<span class="whenfetched">
-	{{ if .Fresh }}
-	(Last Fetched: <time datetime="{{ dateTime .LastFetch }}"></time>)
-	{{ end }}
-	</span>
+	<div class="win">
+		<div class="wintag">
+		<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+		<h1><a href="/{{ .EncodedKey }}">{{ .Title }}</a></h1>
+		</div>
+
+		<div class="winbody">
+			<input type="checkbox" name="{{ .EncodedKey}}">
+			{{ if .Fresh }}
+			Last Fetched: <time datetime="{{ dateTime .LastFetch }}"></time>
+			{{ end }}
+		</div>
 	</div>
 {{end}}
-<input type="submit" value="unsubscribe">
-</form>
-<form  action="/add" method="post">
-<input type="submit" value="subscribe"><input type="text" value="" name="url">
-</form>
-<form action="/addopml" method="post" enctype="multipart/form-data">
-<input type="submit" value="OPML Subscribe"><input type="file" name="opml">
-</form>
+
+	<input type="submit" value="unsubscribe">
+	</form>
+	<form  action="/add" method="post">
+	<input type="submit" value="subscribe"><input type="text" value="" name="url">
+	</form>
+	<form action="/addopml" method="post" enctype="multipart/form-data">
+	<input type="submit" value="OPML Subscribe"><input type="file" name="opml">
+	</form>
 
 </div>
 
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script type="text/javascript" src="https://raw.github.com/timrwood/moment/2.0.0/min/moment.min.js"></script>
-
-<script type="text/javascript">
-$(document).ready(function(){
-	$("time").each(function(i, elm){
-		var utc = moment.utc($(elm).attr('datetime'));
-		console.log(i + " " + $(elm).attr('datetime') + " " + utc + " " + utc.format('LLLL'));
-		$(elm).html(utc.local().format('LLLL'));
-	});
-});
-</script>
+<script type="text/javascript" src="js/common.js"></script>
 </body>
 
 </html>

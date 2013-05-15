@@ -39,8 +39,9 @@ func init() {
 }
 
 type root struct {
-	User  UserInfo
-	Feeds []userFeedInfo
+	User   UserInfo
+	Logout string
+	Feeds  []userFeedInfo
 }
 
 // FeedInfo is the information about a feed in the user's feed list.
@@ -101,7 +102,14 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 
 	sort.Sort(feeds)
 
-	if err := templates.ExecuteTemplate(w, "list.html", root{User: uinfo, Feeds: feeds}); err != nil {
+	var logout string
+	logout, err = user.LogoutURL(c, "/")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := templates.ExecuteTemplate(w, "list.html", root{User: uinfo, Logout: logout, Feeds: feeds}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
