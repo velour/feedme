@@ -6,7 +6,7 @@ body {
 	font-size: 100%;
 }
 
-div#articles {
+div#maindiv {
 	background-color: #ffffff;
 	border-style: solid;
 	border-width: 2px;
@@ -17,11 +17,11 @@ header#top form {
 	float: right;
 }
 
-header nav {
+header#top nav {
 	float: right;
 }
 
-article {
+.win {
 	margin-top: 0;
 	margin-bottom: 0;
 	background-color: #FFFFEA;
@@ -29,27 +29,27 @@ article {
 	border-width: 2px;
 }
 
-article + article {
+.win + .win {
 	border-top-style: none;
 }
 
-article span.error {
+.win span.error {
 	color: #FF0000;
 }
 
-article header {
+.wintag {
 	background-color: #EAFFFF;
 	padding-bottom: 2px; /* nearly (for some reason) article header span.box border size */
 	padding-top: 3px; /* article header span.box border size */
 }
 
-article header.expanded {
+.wintag.expanded {
 	border-bottom-style: solid;
 	border-bottom-width: 1px;
 	border-color: rgb(136,137,199);
 }
 
-article header span.box {
+.wintag span.box {
 	margin-top: 3px; /* article header span.box border size */
 	border-style: solid;
 	border-width: 3px; 
@@ -57,7 +57,7 @@ article header span.box {
 	height: 100%;
 }
 
-article header h1 {
+.wintag h1 {
 	display: inline;
 	margin-top: 0;
 	margin-bottom: 0;
@@ -65,18 +65,18 @@ article header h1 {
 	text-transform: capitalize;
 }
 
-article header h1 a {
+.wintag h1 a {
 	color: #000000;
 	text-decoration: none;
 }
 
-article header div.meta {
+.wintag div.meta {
 	font-style: italic;
 	font-size: small;
 	margin-left: 3%;
 }
 
-article section.description {
+.winbody {
 	display: none;
 	margin-right: 3%;
 	margin-left: 3%;

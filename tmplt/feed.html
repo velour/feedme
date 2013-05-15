@@ -8,92 +8,67 @@
 </head>
 
 <body>
-<div id="articles">
-<header id="top">
-<nav>
-<a href="{{ .Logout }}">[logout]</a>
-<a href="/list">[manage feeds]</a>
-<a href="javascript:feedme.collapseAll()">[collapse all]</a>
-<a href="javascript:feedme.expandAll()">[expand all]</a>
-</nav>
-{{ if .Link }}
-<h1><a href="{{ .Link }}">{{ .Title }}</a></h1>
-{{ else }}
-<h1>{{ .Title }}</h1>
-{{ end }}
-</header>
+
+<div id="maindiv">
+	<header id="top">
+		<nav>
+		<a href="{{ .Logout }}">[logout]</a>
+		<a href="/list">[manage feeds]</a>
+		<a href="javascript:feedme.collapseAll()">[collapse all]</a>
+		<a href="javascript:feedme.expandAll()">[expand all]</a>
+		</nav>
+		{{ if .Link }}
+		<h1><a href="{{ .Link }}">{{ .Title }}</a></h1>
+		{{ else }}
+		<h1>{{ .Title }}</h1>
+		{{ end }}
+	</header>
 
 {{ with .Errors }}
-	<article>
+	<article class="win">
 
-	<header>
-	<div>
-	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-	<h1><span class="error">Errors</span></h1>
-	</div>
+	<header class="wintag">
+		<div>
+		<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+		<h1><span class="error">Errors</span></h1>
+		</div>
 	</header>
 
-	<section class="description">
-	<ul>
-	{{ range . }}<li><span class="error">{{ .Error }}</span></li>{{ end }}
-	</ul>
+	<section class="winbody">
+		<ul>
+		{{ range . }}<li><span class="error">{{ .Error }}</span></li>{{ end }}
+		</ul>
 	</section>
+
 	</article>
 {{ end }}
+
 {{ range $index, $elem := .Articles }}
 	<!-- Don't display articles until the page is ready and we compute their local times -->
-	<article style="display: none">
-	<header>
-	<div>
-	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-	<h1><a href="{{ $elem.Link }}">{{ $elem.Title }}</a></h1>
-	</div>
-	<div class="meta">
-	<span class="origin">{{ $elem.OriginTitle }}</span>
-	<time datetime="{{ dateTime  $elem.When }}"></time>
-	</div>
+	<article style="display: none" class="win">
+
+	<header class="wintag">
+		<div>
+		<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+		<h1><a href="{{ $elem.Link }}">{{ $elem.Title }}</a></h1>
+		</div>
+		<div class="meta">
+		<span class="origin">{{ $elem.OriginTitle }}</span>
+		<time datetime="{{ dateTime  $elem.When }}"></time>
+		</div>
 	</header>
-	<section class="description">
-	{{ $elem.Description }}
+
+	<section class="winbody">
+		{{ $elem.Description }}
 	</section>
+
 	</article>
 {{end}}
 </div>
 
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 <script type="text/javascript" src="https://raw.github.com/timrwood/moment/2.0.0/min/moment.min.js"></script>
-
-<script type="text/javascript">
-var feedme = {
-	collapseAll: function () {
-		$("article section.description").hide();
-	},
-
-	expandAll: function () {
-		$("article section.description").show();
-	},
-}
-
-$(document).ready(function(){
-	$("time").each(function(i, elm){
-		var utc = moment.utc($(elm).attr('datetime'));
-		$(elm).html(utc.local().format('LLLL'));
-		$(elm).closest("article").show();
-	});
-	$("article header span.box").click(function(event){
-		var art = $(event.target).closest("article");
-		var head = art.find("header");
-		var sect = art.find("section.description");
-		if (sect.css("display") === "none") {
-			sect.show();
-			head.addClass("expanded");
-		} else {
-			sect.hide();
-			head.removeClass("expanded");
-		}
-	})
-});
-</script>
+<script type="text/javascript" src="js/common.js"></script>
 
 </body>
 
