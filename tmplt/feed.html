@@ -3,36 +3,6 @@
 
 <head>
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-
-<script type="text/javascript">
-var feedme = {
-	collapseAll: function () {
-		$("article section.description").hide();
-	},
-
-	expandAll: function () {
-		$("article section.description").show();
-	},
-}
-
-$(document).ready(function(){
-	$("article header span.box").click(function(event){
-		var art = $(event.target).closest("article");
-		var head = art.find("header");
-		var sect = art.find("section.description");
-		if (sect.css("display") === "none") {
-			sect.show();
-			head.addClass("expanded");
-		} else {
-			sect.hide();
-			head.removeClass("expanded");
-		}
-	});
-});
-</script>
-
 <link rel="stylesheet" href="css/acme.css">
 <title>Feed Me!</title>
 </head>
@@ -71,7 +41,8 @@ $(document).ready(function(){
 	</article>
 {{ end }}
 {{ range $index, $elem := .Articles }}
-	<article>
+	<!-- Don't display articles until the page is ready and we compute their local times -->
+	<article style="display: none">
 	<header>
 	<div>
 	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
@@ -79,7 +50,7 @@ $(document).ready(function(){
 	</div>
 	<div class="meta">
 	<span class="origin">{{ $elem.OriginTitle }}</span>
-	<time datetime="{{ dateTime  $elem.When }}">{{  timeString $elem.When }}</time>
+	<time datetime="{{ dateTime  $elem.When }}"></time>
 	</div>
 	</header>
 	<section class="description">
@@ -88,6 +59,42 @@ $(document).ready(function(){
 	</article>
 {{end}}
 </div>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="https://raw.github.com/timrwood/moment/2.0.0/min/moment.min.js"></script>
+
+<script type="text/javascript">
+var feedme = {
+	collapseAll: function () {
+		$("article section.description").hide();
+	},
+
+	expandAll: function () {
+		$("article section.description").show();
+	},
+}
+
+$(document).ready(function(){
+	$("time").each(function(i, elm){
+		var utc = moment.utc($(elm).attr('datetime'));
+		$(elm).html(utc.local().format('LLLL'));
+		$(elm).closest("article").show();
+	});
+	$("article header span.box").click(function(event){
+		var art = $(event.target).closest("article");
+		var head = art.find("header");
+		var sect = art.find("section.description");
+		if (sect.css("display") === "none") {
+			sect.show();
+			head.addClass("expanded");
+		} else {
+			sect.hide();
+			head.removeClass("expanded");
+		}
+	})
+});
+</script>
+
 </body>
 
 </html>
