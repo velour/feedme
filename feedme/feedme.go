@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"path"
 	"sort"
 	"strings"
 	"time"
@@ -151,7 +152,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var key *datastore.Key
 		var err error
-		if key, err = datastore.DecodeKey(r.URL.Path[1:]); err != nil {
+		if key, err = datastore.DecodeKey(path.Base(r.URL.Path)); err != nil {
 			http.NotFound(w, r)
 			return
 		}
