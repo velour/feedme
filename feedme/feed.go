@@ -8,6 +8,7 @@ import (
 	"github.com/velour/feedme/webfeed"
 	"html/template"
 	"sort"
+	"strconv"
 	"time"
 )
 
@@ -35,6 +36,12 @@ type Article struct {
 
 func (a Article) Description() template.HTML {
 	return template.HTML(a.DescriptionData)
+}
+
+// StringID returns a unique string that can be used to identify this
+// article in a datastore.Key.
+func (a Article) StringID() string {
+	return a.Title + strconv.FormatInt(a.When.UnixNano(), 10)
 }
 
 // Articles is a slice of Articles implementing sort.Interface.
@@ -138,7 +145,7 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 	}
 
 	for _, a := range articles {
-		k := datastore.NewKey(c, articleKind, a.Link, 0, key)
+		k := datastore.NewKey(c, articleKind, a.StringID(), 0, key)
 		id := k.StringID()
 		if _, ok := stored[id]; ok {
 			delete(stored, id)
