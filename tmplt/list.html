@@ -20,7 +20,24 @@
 		<h1>Feeds</h1>
 	</header>
 
-	<form action="/rm" method="post">
+	<div class="win">
+		<div class="wintag">
+		<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+		<h1>Update Subscriptions</h1>
+		</div>
+
+		<div class="winbody">
+		<form action="/update" method="post">
+		<textarea id="update" name="urls">{{ range .Feeds }}{{ .Url }}
+{{ end }}</textarea>
+		<input type="submit" value="update">
+		</form>
+	
+		<form action="/addopml" method="post" enctype="multipart/form-data">
+		<input type="submit" value="OPML Subscribe"><input type="file" name="opml">
+		</form>
+		</div>
+	</div>
 
 {{ range .Feeds }}
 	<div class="win">
@@ -30,23 +47,12 @@
 		</div>
 
 		<div class="winbody">
-			<input type="checkbox" name="{{ .EncodedKey}}">
-			{{ if .Fresh }}
-			Last Fetched: <time datetime="{{ dateTime .LastFetch }}"></time>
-			{{ end }}
+		{{ if .Fresh }}
+		Last Fetched: <time datetime="{{ dateTime .LastFetch }}"></time>
+		{{ end }}
 		</div>
 	</div>
 {{end}}
-
-	<input type="submit" value="unsubscribe">
-	</form>
-	<form  action="/add" method="post">
-	<input type="submit" value="subscribe"><input type="text" value="" name="url">
-	</form>
-	<form action="/addopml" method="post" enctype="multipart/form-data">
-	<input type="submit" value="OPML Subscribe"><input type="file" name="opml">
-	</form>
-
 </div>
 
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>

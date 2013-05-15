@@ -84,3 +84,9 @@ header#top nav {
 	margin-top: 1em;
 	overflow: auto;
 }
+
+textarea#update {
+	width: 75%;
+	height: 10em;
+	display: block;
+}

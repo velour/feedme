@@ -33,14 +33,14 @@ const (
 
 func init() {
 	http.HandleFunc("/list", handleList)
-	http.HandleFunc("/add", handleAdd)
 	http.HandleFunc("/addopml", handleOpml)
-	http.HandleFunc("/rm", handleRm)
+	http.HandleFunc("/update", handleUpdate)
 	http.HandleFunc("/", handleRoot)
 }
 
 type feedListEntry struct {
 	Title      string
+	Url        string
 	LastFetch  time.Time
 	EncodedKey string
 }
@@ -94,6 +94,7 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 	for i := range infos {
 		page.Feeds = append(page.Feeds, feedListEntry{
 			Title:      infos[i].Title,
+			Url:        infos[i].Url,
 			LastFetch:  infos[i].LastFetch,
 			EncodedKey: page.User.Feeds[i].Encode(),
 		})
@@ -205,30 +206,6 @@ func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (articles A
 	return
 }
 
-func handleAdd(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.NotFound(w, r)
-		return
-	}
-
-	c := appengine.NewContext(r)
-
-	// Check tha the feed is even valid, and put it in the datastore.
-	url := r.FormValue("url")
-	f, err := checkUrl(c, url)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err := subscribe(c, f); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, "/list", http.StatusFound)
-}
-
 type Outline struct {
 	XmlURL   string     `xml:"xmlUrl,attr"`
 	Outlines []*Outline `xml:"outline"`
@@ -288,28 +265,71 @@ func opmlWalk(r *Outline, urls []string) []string {
 	return urls
 }
 
-func handleRm(w http.ResponseWriter, r *http.Request) {
+type errorList []error
+
+func (es errorList) Error() string {
+	s := ""
+	for _, e := range es {
+		s += e.Error() + "\n"
+	}
+	return s
+}
+
+func handleUpdate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.NotFound(w, r)
 		return
 	}
 
 	c := appengine.NewContext(r)
-
-	uinfo, err := getUserInfo(c)
+	u, err := getUserInfo(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	for _, k := range uinfo.Feeds {
-		if r.FormValue(k.Encode()) != "on" {
+	curFeeds := make(map[string]bool)
+	for _, f := range u.Feeds {
+		curFeeds[f.StringID()] = true
+	}
+
+	var errs errorList
+
+	urls := strings.Split(r.FormValue("urls"), "\n")
+	for _, url := range urls {
+		url = strings.TrimSpace(url)
+		if len(url) == 0 {
 			continue
 		}
-		if err := unsubscribe(c, k); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		if curFeeds[url] {
+			delete(curFeeds, url)
+		} else {
+			c.Debugf("Subscribing to [%s]", url)
+			f, err := checkUrl(c, url)
+			if err != nil {
+				err = fmt.Errorf("Failed to read %s: %s", url, err.Error())
+				errs = append(errs, err)
+				continue
+			}
+			if err := subscribe(c, f); err != nil {
+				err = fmt.Errorf("Failed to subscribe to %s: %s", url, err.Error())
+				errs = append(errs, err)
+			}
 		}
+	}
+
+	for url := range curFeeds {
+		k := datastore.NewKey(c, feedKind, url, 0, nil)
+		c.Debugf("Unsubscribing from [%s]", url)
+		if err := unsubscribe(c, k); err != nil {
+			err = fmt.Errorf("Failed to unsubscribe from %s: %s", url, err.Error())
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		http.Error(w, errs.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	http.Redirect(w, r, "/list", http.StatusFound)
