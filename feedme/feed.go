@@ -75,9 +75,13 @@ type FeedInfo struct {
 }
 
 // GetArticles returns all articles for a feed, refreshing it if necessary.
-func (f FeedInfo) articles(c appengine.Context) (articles Articles, err error) {
+func (f FeedInfo) articlesSince(c appengine.Context, t time.Time) (articles Articles, err error) {
 	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-	_, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles)
+	if t.IsZero() {
+		_, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles)
+	} else {
+		_, err = datastore.NewQuery(articleKind).Ancestor(key).Filter("When >=", t).GetAll(c, &articles)
+	}
 	return
 }
 

@@ -27,6 +27,10 @@ var (
 	templates = template.Must(template.New("t").Funcs(funcs).ParseFiles(templateFiles...))
 )
 
+const (
+	latestDuration = 18 * time.Hour
+)
+
 func init() {
 	http.HandleFunc("/list", handleList)
 	http.HandleFunc("/add", handleAdd)
@@ -132,8 +136,11 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Path == "/" {
-		feedPage.Title = "All Feeds"
-		feedPage.Articles, feedPage.Errors = allArticles(c, uinfo)
+		feedPage.Title = "Latest Articles"
+		feedPage.Articles, feedPage.Errors = articlesSince(c, uinfo, time.Now().Add(-latestDuration))
+	} else if r.URL.Path == "/all" {
+		feedPage.Title = "All Articles"
+		feedPage.Articles, feedPage.Errors = articlesSince(c, uinfo, time.Time{})
 	} else {
 		var key *datastore.Key
 		var err error
@@ -154,7 +161,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		} else {
 			feedPage.Title = f.Title
 			feedPage.Link = f.Link
-			feedPage.Articles, err = f.articles(c)
+			feedPage.Articles, err = f.articlesSince(c, time.Time{})
 			if err != nil {
 				feedPage.Errors = []error{err}
 			}
@@ -169,7 +176,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func allArticles(c appengine.Context, uinfo UserInfo) (articles Articles, errs []error) {
+func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (articles Articles, errs []error) {
 	for _, key := range uinfo.Feeds {
 		var f FeedInfo
 		if err := datastore.Get(c, key, &f); err != nil {
@@ -182,7 +189,7 @@ func allArticles(c appengine.Context, uinfo UserInfo) (articles Articles, errs [
 			errs = append(errs, err)
 			continue
 		}
-		as, err := f.articles(c)
+		as, err := f.articlesSince(c, t)
 		if err != nil {
 			err = fmt.Errorf("%s: failed to read articles: %s", f.Url, err.Error())
 			errs = append(errs, err)
