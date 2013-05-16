@@ -21,6 +21,16 @@ header#top nav {
 	float: right;
 }
 
+header#top nav a {
+	color: black;
+	text-decoration: none;
+	padding-right: 3px;
+}
+
+header#top nav a:not(:last-child) {
+	border-right: 2px solid #000000;	
+}
+
 .win {
 	margin-top: 0;
 	margin-bottom: 0;
