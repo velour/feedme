@@ -1,10 +1,12 @@
 var feedme = {
 	collapseAll: function () {
 		$(".winbody").hide();
+		$(".wintag").removeClass("expanded");
 	},
 
 	expandAll: function () {
 		$(".winbody").show();
+		$(".wintag").addClass("expanded");
 	},
 }
 
