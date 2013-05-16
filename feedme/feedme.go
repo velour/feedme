@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"path"
 	"sort"
 	"strings"
 	"time"
@@ -32,40 +33,34 @@ const (
 
 func init() {
 	http.HandleFunc("/list", handleList)
-	http.HandleFunc("/add", handleAdd)
 	http.HandleFunc("/addopml", handleOpml)
-	http.HandleFunc("/rm", handleRm)
+	http.HandleFunc("/update", handleUpdate)
 	http.HandleFunc("/", handleRoot)
 }
 
-type root struct {
-	User  UserInfo
-	Feeds []userFeedInfo
-}
-
-// FeedInfo is the information about a feed in the user's feed list.
-type userFeedInfo struct {
+type feedListEntry struct {
 	Title      string
+	Url        string
 	LastFetch  time.Time
 	EncodedKey string
 }
 
-func (f userFeedInfo) Fresh() bool {
+func (f feedListEntry) Fresh() bool {
 	return time.Since(f.LastFetch) < maxCacheDuration
 }
 
-// userFeedInfos is a type for sorting the infos.
-type userFeedInfos []userFeedInfo
+// feedListEntrys is a type for sorting the infos.
+type feedList []feedListEntry
 
-func (u userFeedInfos) Len() int {
+func (u feedList) Len() int {
 	return len(u)
 }
 
-func (u userFeedInfos) Less(i, j int) bool {
+func (u feedList) Less(i, j int) bool {
 	return strings.ToLower(u[i].Title) < strings.ToLower(u[j].Title)
 }
 
-func (u userFeedInfos) Swap(i, j int) {
+func (u feedList) Swap(i, j int) {
 	u[i], u[j] = u[j], u[i]
 }
 
@@ -77,31 +72,43 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 
 	c := appengine.NewContext(r)
 
-	uinfo, err := getUserInfo(c)
+	var page struct {
+		User   UserInfo
+		Logout string
+		Feeds  feedList
+	}
+
+	var err error
+	page.User, err = getUserInfo(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	infos := make([]FeedInfo, len(uinfo.Feeds))
-	err = datastore.GetMulti(c, uinfo.Feeds, infos)
-	if err != nil {
+	infos := make([]FeedInfo, len(page.User.Feeds))
+	if err = datastore.GetMulti(c, page.User.Feeds, infos); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	var feeds userFeedInfos
 	for i := range infos {
-		feeds = append(feeds, userFeedInfo{
+		page.Feeds = append(page.Feeds, feedListEntry{
 			Title:      infos[i].Title,
+			Url:        infos[i].Url,
 			LastFetch:  infos[i].LastFetch,
-			EncodedKey: uinfo.Feeds[i].Encode(),
+			EncodedKey: page.User.Feeds[i].Encode(),
 		})
 	}
 
-	sort.Sort(feeds)
+	sort.Sort(page.Feeds)
 
-	if err := templates.ExecuteTemplate(w, "list.html", root{User: uinfo, Feeds: feeds}); err != nil {
+	page.Logout, err = user.LogoutURL(c, "/")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := templates.ExecuteTemplate(w, "list.html", page); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -143,7 +150,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var key *datastore.Key
 		var err error
-		if key, err = datastore.DecodeKey(r.URL.Path[1:]); err != nil {
+		if key, err = datastore.DecodeKey(path.Base(r.URL.Path)); err != nil {
 			http.NotFound(w, r)
 			return
 		}
@@ -197,30 +204,6 @@ func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (articles A
 		articles = append(articles, as...)
 	}
 	return
-}
-
-func handleAdd(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.NotFound(w, r)
-		return
-	}
-
-	c := appengine.NewContext(r)
-
-	// Check tha the feed is even valid, and put it in the datastore.
-	url := r.FormValue("url")
-	f, err := checkUrl(c, url)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err := subscribe(c, f); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, "/list", http.StatusFound)
 }
 
 type Outline struct {
@@ -282,28 +265,71 @@ func opmlWalk(r *Outline, urls []string) []string {
 	return urls
 }
 
-func handleRm(w http.ResponseWriter, r *http.Request) {
+type errorList []error
+
+func (es errorList) Error() string {
+	s := ""
+	for _, e := range es {
+		s += e.Error() + "\n"
+	}
+	return s
+}
+
+func handleUpdate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.NotFound(w, r)
 		return
 	}
 
 	c := appengine.NewContext(r)
-
-	uinfo, err := getUserInfo(c)
+	u, err := getUserInfo(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	for _, k := range uinfo.Feeds {
-		if r.FormValue(k.Encode()) != "on" {
+	curFeeds := make(map[string]bool)
+	for _, f := range u.Feeds {
+		curFeeds[f.StringID()] = true
+	}
+
+	var errs errorList
+
+	urls := strings.Split(r.FormValue("urls"), "\n")
+	for _, url := range urls {
+		url = strings.TrimSpace(url)
+		if len(url) == 0 {
 			continue
 		}
-		if err := unsubscribe(c, k); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+		if curFeeds[url] {
+			delete(curFeeds, url)
+		} else {
+			c.Debugf("Subscribing to [%s]", url)
+			f, err := checkUrl(c, url)
+			if err != nil {
+				err = fmt.Errorf("Failed to read %s: %s", url, err.Error())
+				errs = append(errs, err)
+				continue
+			}
+			if err := subscribe(c, f); err != nil {
+				err = fmt.Errorf("Failed to subscribe to %s: %s", url, err.Error())
+				errs = append(errs, err)
+			}
 		}
+	}
+
+	for url := range curFeeds {
+		k := datastore.NewKey(c, feedKind, url, 0, nil)
+		c.Debugf("Unsubscribing from [%s]", url)
+		if err := unsubscribe(c, k); err != nil {
+			err = fmt.Errorf("Failed to unsubscribe from %s: %s", url, err.Error())
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		http.Error(w, errs.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	http.Redirect(w, r, "/list", http.StatusFound)
