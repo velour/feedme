@@ -12,10 +12,10 @@
 <div id="maindiv">
 	<header id="top">
 		<nav>
-		<a href="{{ .Logout }}">[logout]</a>
-		<a href="/list">[manage feeds]</a>
-		<a href="javascript:feedme.collapseAll()">[collapse all]</a>
-		<a href="javascript:feedme.expandAll()">[expand all]</a>
+			<a href="{{ .Logout }}">Logout</a>
+			<a href="/list">Manage</a>
+			<a href="javascript:feedme.collapseAll()">Collapse</a>
+			<a href="javascript:feedme.expandAll()">Expand</a>
 		</nav>
 		{{ if .Link }}
 		<h1><a href="{{ .Link }}">{{ .Title }}</a></h1>
