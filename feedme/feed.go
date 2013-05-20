@@ -14,7 +14,7 @@ import (
 
 const (
 	// MaxCacheDuration is the length of time to store a feed before refetching it
-	maxCacheDuration = time.Minute * 30
+	maxCacheDuration = 25 * time.Minute
 
 	// MaxNewArticles is the maximum number of articles stored when fetching
 	// new articles from a feed.
