@@ -35,6 +35,7 @@ func init() {
 	http.HandleFunc("/list", handleList)
 	http.HandleFunc("/addopml", handleOpml)
 	http.HandleFunc("/update", handleUpdate)
+	http.HandleFunc("/refresh", handleRefresh)
 	http.HandleFunc("/", handleRoot)
 }
 
@@ -329,6 +330,34 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 
 	if len(errs) > 0 {
 		http.Error(w, errs.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/list", http.StatusFound)
+}
+
+func handleRefresh(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.NotFound(w, r)
+		return
+	}
+
+	key, err := datastore.DecodeKey(r.FormValue("feed"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	c := appengine.NewContext(r)
+
+	var f FeedInfo
+	if err = datastore.Get(c, key, &f); err != nil {
+		http.Error(w, key.StringID() + " failed to load from the datastore: " + err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err = f.ensureFresh(c); err != nil {
+		http.Error(w, f.Url + " failed to refresh: " + err.Error(), http.StatusInternalServerError)
 		return
 	}
 
