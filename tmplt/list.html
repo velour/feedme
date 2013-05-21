@@ -11,7 +11,7 @@
 <div id="maindiv">
 	<header id="top">
 		{{template "navbar.html" .}}
-		<h1>{{.Title}}</h1>
+		<h1><span class="title">{{.Title}}</span></h1>
 	</header>
 
 	<div class="win">
@@ -37,7 +37,7 @@
 	<div class="win">
 		<div class="wintag">
 		<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-		<h1><a href="/{{.EncodedKey}}">{{.Title}}</a></h1>
+		<h1><a href="/{{.EncodedKey}}"><span class="title">{{.Title}}</span></a></h1>
 		</div>
 
 		<div class="winbody">

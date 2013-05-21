@@ -13,9 +13,9 @@
 	<header id="top">
 		{{template "navbar.html" .}}
 		{{if .Link}}
-		<h1><a href="{{.Link}}">{{.Title}}</a></h1>
+		<h1><span class="title"><a href="{{.Link}}">{{.Title}}</span></a></h1>
 		{{else}}
-		<h1>{{.Title}}</h1>
+		<h1><span class="title">{{.Title}}</span></h1>
 		{{end}}
 	</header>
 
@@ -48,7 +48,7 @@
 		<h1><a href="{{$elem.Link}}">{{$elem.Title}}</a></h1>
 		</div>
 		<div class="meta">
-		<span class="origin">{{$elem.OriginTitle}}</span>
+		<span class="origin title">{{$elem.OriginTitle}}</span>
 		<time datetime="{{dateTime  $elem.When}}"></time>
 		</div>
 	</header>
