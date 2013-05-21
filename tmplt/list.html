@@ -50,6 +50,11 @@
 		{{ .Url }}<br>
 		{{ if .Fresh }}
 		Last Fetched: <time datetime="{{ dateTime .LastFetch }}"></time>
+		{{ else }}
+		<form action="/refresh" method="post" enctype="multipart/form-data">
+		<input type="submit" value="Refresh">
+		<input type="hidden" value="{{ .EncodedKey }}" name="feed">
+		</form>
 		{{ end }}
 		</div>
 	</div>

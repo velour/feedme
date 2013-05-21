@@ -1,0 +1,4 @@
+cron:
+- description: refresh the feeds
+  url: /refreshAll
+  schedule: every 31 minutes

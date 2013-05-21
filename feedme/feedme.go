@@ -3,6 +3,7 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/taskqueue"
 	"appengine/user"
 	"encoding/xml"
 	"fmt"
@@ -35,6 +36,8 @@ func init() {
 	http.HandleFunc("/list", handleList)
 	http.HandleFunc("/addopml", handleOpml)
 	http.HandleFunc("/update", handleUpdate)
+	http.HandleFunc("/refresh", handleRefresh)
+	http.HandleFunc("/refreshAll", handleRefreshAll)
 	http.HandleFunc("/", handleRoot)
 }
 
@@ -160,10 +163,6 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 			err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
 			feedPage.Errors = []error{err}
 
-		} else if err := f.ensureFresh(c); err != nil {
-			err = fmt.Errorf("%s: failed to refresh: %s", f.Url, err.Error())
-			feedPage.Errors = []error{err}
-
 		} else {
 			feedPage.Title = f.Title
 			feedPage.Link = f.Link
@@ -187,11 +186,6 @@ func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (articles A
 		var f FeedInfo
 		if err := datastore.Get(c, key, &f); err != nil {
 			err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
-			errs = append(errs, err)
-			continue
-		}
-		if err := f.ensureFresh(c); err != nil {
-			err = fmt.Errorf("%s: failed to refresh: %s", f.Url, err.Error())
 			errs = append(errs, err)
 			continue
 		}
@@ -333,4 +327,59 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/list", http.StatusFound)
+}
+
+func handleRefresh(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.NotFound(w, r)
+		return
+	}
+
+	k, err := datastore.DecodeKey(r.FormValue("feed"))
+	if err != nil {
+		http.NotFound(w, r)
+		return
+	}
+
+	c := appengine.NewContext(r)
+	c.Debugf("refreshing %s\n", k)
+
+	var f FeedInfo
+	if err = datastore.Get(c, k, &f); err != nil {
+		http.Error(w, k.StringID()+" failed to load from the datastore: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err = f.ensureFresh(c); err != nil {
+		http.Error(w, f.Url+" failed to refresh: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusResetContent)
+}
+
+func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
+	var errs errorList
+	c := appengine.NewContext(r)
+	for it := datastore.NewQuery(feedKind).KeysOnly().Run(c); ; {
+		k, err := it.Next(nil)
+		if err == datastore.Done {
+			break
+		} else if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+
+		c.Debugf("adding a task to refresh %s\n", k)
+		t := taskqueue.NewPOSTTask("/refresh", map[string][]string{"feed": {k.Encode()}})
+		if _, err := taskqueue.Add(c, t, ""); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		http.Error(w, errs.Error(), http.StatusInternalServerError)
+	}
+	return
 }
