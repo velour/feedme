@@ -10,54 +10,45 @@
 <body>
 
 <div id="maindiv">
-	<header id="top">
-		{{template "navbar.html" .}}
-		{{if .Link}}
-		<h1><span class="title"><a href="{{.Link}}">{{.Title}}</span></a></h1>
-		{{else}}
-		<h1><span class="title">{{.Title}}</span></h1>
-		{{end}}
-	</header>
+<header id="top">
+{{template "navbar.html" .}}
+{{if .Link}}<h1><span class="title"><a href="{{.Link}}">{{.Title}}</span></a></h1>
+{{else}}<h1><span class="title">{{.Title}}</span></h1>{{end}}
+</header>
 
 {{with .Errors}}
-	<article class="win">
-
-	<header class="wintag">
-		<div>
-		<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-		<h1><span class="error">Errors</span></h1>
-		</div>
-	</header>
-
-	<section class="winbody">
-		<ul>
-		{{range .}}<li><span class="error">{{.Error}}</span></li>{{end}}
-		</ul>
-	</section>
-
-	</article>
+<article class="win">
+<header class="wintag">
+	<div>
+	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+	<h1><span class="error">Errors</span></h1>
+	</div>
+</header>
+<section class="winbody">
+	<ul>
+	{{range .}}<li><span class="error">{{.Error}}</span></li>{{end}}
+	</ul>
+</section>
+</article>
 {{end}}
 
 {{range $index, $elem := .Articles}}
-	<!-- Don't display articles until the page is ready and we compute their local times -->
-	<article style="display: none" class="win">
-
-	<header class="wintag">
-		<div>
-		<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-		<h1><a href="{{$elem.Link}}">{{$elem.Title}}</a></h1>
-		</div>
-		<div class="meta">
-		<span class="origin title">{{$elem.OriginTitle}}</span>
-		<time datetime="{{dateTime  $elem.When}}"></time>
-		</div>
-	</header>
-
-	<section class="winbody">
-		{{$elem.Description}}
-	</section>
-
-	</article>
+<!-- Don't display articles until the page is ready and we compute their local times -->
+<article style="display: none" class="win">
+<header class="wintag">
+	<div>
+	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+	<h1><a href="{{$elem.Link}}">{{$elem.Title}}</a></h1>
+	</div>
+	<div class="meta">
+	<span class="origin title">{{$elem.OriginTitle}}</span>
+	<time datetime="{{dateTime  $elem.When}}"></time>
+	</div>
+</header>
+<section class="winbody">
+	{{$elem.Description}}
+</section>
+</article>
 {{end}}
 </div>
 
