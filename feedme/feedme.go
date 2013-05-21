@@ -17,12 +17,14 @@ import (
 
 var (
 	templateFiles = []string{
+		"tmplt/navbar.html",
 		"tmplt/list.html",
 		"tmplt/feed.html",
 	}
 
 	funcs = template.FuncMap{
 		"dateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
+		"stringEq": func(a, b string) bool { return a == b },
 	}
 
 	templates = template.Must(template.New("t").Funcs(funcs).ParseFiles(templateFiles...))
@@ -76,10 +78,12 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
 	var page struct {
+		Title  string
 		User   UserInfo
 		Logout string
 		Feeds  feedList
 	}
+	page.Title = "Feeds"
 
 	var err error
 	page.User, err = getUserInfo(c)

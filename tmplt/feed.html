@@ -11,12 +11,7 @@
 
 <div id="maindiv">
 	<header id="top">
-		<nav>
-			<a href="{{.Logout}}">Logout</a>
-			<a href="/list">Manage</a>
-			<a href="javascript:feedme.collapseAll()">Collapse</a>
-			<a href="javascript:feedme.expandAll()">Expand</a>
-		</nav>
+		{{template "navbar.html" .}}
 		{{if .Link}}
 		<h1><a href="{{.Link}}">{{.Title}}</a></h1>
 		{{else}}
