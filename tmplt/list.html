@@ -11,7 +11,7 @@
 <div id="maindiv">
 	<header id="top">
 		<nav>
-			<a href="{{ .Logout }}">Logout</a>
+			<a href="{{.Logout}}">Logout</a>
 			<a href="/">Latest</a>
 			<a href="/all">All</a>
 			<a href="javascript:feedme.collapseAll()">Collapse</a>
@@ -28,8 +28,8 @@
 
 		<div class="winbody">
 		<form action="/update" method="post">
-		<textarea id="update" name="urls">{{ range .Feeds }}{{ .Url }}
-{{ end }}</textarea>
+		<textarea id="update" name="urls">{{range .Feeds}}{{.Url}}
+{{end}}</textarea>
 		<input type="submit" value="update">
 		</form>
 	
@@ -39,23 +39,23 @@
 		</div>
 	</div>
 
-{{ range .Feeds }}
+{{range .Feeds}}
 	<div class="win">
 		<div class="wintag">
 		<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-		<h1><a href="/{{ .EncodedKey }}">{{ .Title }}</a></h1>
+		<h1><a href="/{{.EncodedKey}}">{{.Title}}</a></h1>
 		</div>
 
 		<div class="winbody">
-		{{ .Url }}<br>
-		{{ if .Fresh }}
-		Last Fetched: <time datetime="{{ dateTime .LastFetch }}"></time>
-		{{ else }}
+		{{.Url}}<br>
+		{{if .Fresh}}
+		Last Fetched: <time datetime="{{dateTime .LastFetch}}"></time>
+		{{else}}
 		<form action="/refresh" method="post" enctype="multipart/form-data">
 		<input type="submit" value="Refresh">
-		<input type="hidden" value="{{ .EncodedKey }}" name="feed">
+		<input type="hidden" value="{{.EncodedKey}}" name="feed">
 		</form>
-		{{ end }}
+		{{end}}
 		</div>
 	</div>
 {{end}}
