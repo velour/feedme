@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<link rel="stylesheet" href="css/acme.css">
+<title>Feed Me!</title>
+</head>
+
+<body>
+
+<div id="maindiv">
+<header id="top">
+{{template "navbar.html" .}}
+{{if .Link}}<h1><span class="title"><a href="{{.Link}}">{{.Title}}</span></a></h1>
+{{else}}<h1><span class="title">{{.Title}}</span></h1>{{end}}
+</header>
+
+{{with .Errors}}
+<article class="win">
+<header class="wintag">
+	<div>
+	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+	<h1><span class="error">Errors</span></h1>
+	</div>
+</header>
+<section class="winbody">
+	<ul>
+	{{range .}}<li><span class="error">{{.Error}}</span></li>{{end}}
+	</ul>
+</section>
+</article>
+{{end}}
+
+{{range .Articles}}
+{{template "article.html" .}}
+{{end}}
+</div>
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/moment.min.js"></script>
+<script type="text/javascript" src="js/common.js"></script>
+
+</body>
+
+</html>

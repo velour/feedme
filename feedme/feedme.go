@@ -18,8 +18,10 @@ import (
 var (
 	templateFiles = []string{
 		"tmplt/navbar.html",
-		"tmplt/list.html",
 		"tmplt/feed.html",
+		"tmplt/manage.html",
+		"tmplt/article.html",
+		"tmplt/articles.html",
 	}
 
 	funcs = template.FuncMap{
@@ -115,7 +117,7 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := templates.ExecuteTemplate(w, "list.html", page); err != nil {
+	if err := templates.ExecuteTemplate(w, "manage.html", page); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -180,7 +182,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	c.Debugf("%d articles\n", len(feedPage.Articles))
 	sort.Sort(feedPage.Articles)
 
-	if err := templates.ExecuteTemplate(w, "feed.html", feedPage); err != nil {
+	if err := templates.ExecuteTemplate(w, "articles.html", feedPage); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
