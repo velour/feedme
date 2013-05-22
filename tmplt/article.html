@@ -1,0 +1,16 @@
+<!-- Don't display articles until the page is ready and we compute their local times -->
+<article style="display: none" class="win">
+<header class="wintag">
+	<div>
+	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+	<h1><a href="{{.Link}}">{{.Title}}</a></h1>
+	</div>
+	<div class="meta">
+	<span class="origin title">{{.OriginTitle}}</span>
+	<time datetime="{{dateTime .When}}"></time>
+	</div>
+</header>
+<section class="winbody">
+	{{.Description}}
+</section>
+</article>

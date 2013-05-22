@@ -1,75 +1,16 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-<link rel="stylesheet" href="css/acme.css">
-<title>Feed Me!</title>
-</head>
-
-<body>
-
-<div id="maindiv">
-	<header id="top">
-		<nav>
-			<a href="{{ .Logout }}">Logout</a>
-			<a href="/list">Manage</a>
-			<a href="javascript:feedme.collapseAll()">Collapse</a>
-			<a href="javascript:feedme.expandAll()">Expand</a>
-		</nav>
-		{{ if .Link }}
-		<h1><a href="{{ .Link }}">{{ .Title }}</a></h1>
-		{{ else }}
-		<h1>{{ .Title }}</h1>
-		{{ end }}
-	</header>
-
-{{ with .Errors }}
-	<article class="win">
-
-	<header class="wintag">
-		<div>
-		<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-		<h1><span class="error">Errors</span></h1>
-		</div>
-	</header>
-
-	<section class="winbody">
-		<ul>
-		{{ range . }}<li><span class="error">{{ .Error }}</span></li>{{ end }}
-		</ul>
-	</section>
-
-	</article>
-{{ end }}
-
-{{ range $index, $elem := .Articles }}
-	<!-- Don't display articles until the page is ready and we compute their local times -->
-	<article style="display: none" class="win">
-
-	<header class="wintag">
-		<div>
-		<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
-		<h1><a href="{{ $elem.Link }}">{{ $elem.Title }}</a></h1>
-		</div>
-		<div class="meta">
-		<span class="origin">{{ $elem.OriginTitle }}</span>
-		<time datetime="{{ dateTime  $elem.When }}"></time>
-		</div>
-	</header>
-
-	<section class="winbody">
-		{{ $elem.Description }}
-	</section>
-
-	</article>
-{{end}}
+<div class="win">
+<div class="wintag">
+	<span class="box">&nbsp;&nbsp;&nbsp;&nbsp;</span>
+	<h1><a href="/{{.EncodedKey}}"><span class="title">{{.Title}}</span></a></h1>
 </div>
-
-<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-<script type="text/javascript" src="js/moment.min.js"></script>
-<script type="text/javascript" src="js/common.js"></script>
-
-</body>
-
-</html>
+<div class="winbody">
+	{{.Url}}<br>
+	{{if .Fresh}}Last Fetched: <time datetime="{{dateTime .LastFetch}}"></time>
+	{{else}}
+	<form action="/refresh" method="post" enctype="multipart/form-data">
+	<input type="submit" value="Refresh">
+	<input type="hidden" value="{{.EncodedKey}}" name="feed">
+	</form>
+	{{end}}
+</div>
+</div>

@@ -17,12 +17,16 @@ import (
 
 var (
 	templateFiles = []string{
-		"tmplt/list.html",
+		"tmplt/navbar.html",
 		"tmplt/feed.html",
+		"tmplt/manage.html",
+		"tmplt/article.html",
+		"tmplt/articles.html",
 	}
 
 	funcs = template.FuncMap{
 		"dateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
+		"stringEq": func(a, b string) bool { return a == b },
 	}
 
 	templates = template.Must(template.New("t").Funcs(funcs).ParseFiles(templateFiles...))
@@ -76,10 +80,12 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
 	var page struct {
+		Title  string
 		User   UserInfo
 		Logout string
 		Feeds  feedList
 	}
+	page.Title = "Feeds"
 
 	var err error
 	page.User, err = getUserInfo(c)
@@ -111,7 +117,7 @@ func handleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := templates.ExecuteTemplate(w, "list.html", page); err != nil {
+	if err := templates.ExecuteTemplate(w, "manage.html", page); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -176,7 +182,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	c.Debugf("%d articles\n", len(feedPage.Articles))
 	sort.Sort(feedPage.Articles)
 
-	if err := templates.ExecuteTemplate(w, "feed.html", feedPage); err != nil {
+	if err := templates.ExecuteTemplate(w, "articles.html", feedPage); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
