@@ -22,7 +22,7 @@
 <div class="winbody">
 	<form action="/update" method="post">
 	<textarea id="update" name="urls">{{range .Feeds}}{{.Url}}
-	{{end}}</textarea>
+{{end}}</textarea>
 	<input type="submit" value="update">
 	</form>
 	<form action="/addopml" method="post" enctype="multipart/form-data">
