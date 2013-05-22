@@ -3,6 +3,7 @@ package webfeed
 import (
 	"bytes"
 	"encoding/xml"
+	"errors"
 	"io"
 	"time"
 
@@ -33,13 +34,22 @@ type Entry struct {
 // first unparsable time encountered.
 func Read(r io.Reader) (Feed, error) {
 	var f feed
-	if err := xml.NewDecoder(r).Decode(&f); err != nil {
+	d := xml.NewDecoder(r)
+	d.CharsetReader = charsetReader
+	if err := d.Decode(&f); err != nil {
 		return Feed{}, err
 	}
 	if f.Rss.Title != "" {
 		return rssFeed(f.Rss)
 	}
 	return atomFeed(f)
+}
+
+func charsetReader(charset string, r io.Reader) (io.Reader, error) {
+	if charset == "ISO-8859-1" || charset == "iso-8859-1" {
+		return r, nil
+	}
+	return nil, errors.New("Unsupported character set encoding: " + charset)
 }
 
 // ErrBadTime is a string containing a time that was not parsable.
