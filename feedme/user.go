@@ -3,6 +3,7 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/taskqueue"
 	"appengine/user"
 	"fmt"
 )
@@ -21,7 +22,7 @@ type UserInfo struct {
 // Subscribe adds a feed to the user's feed list if it is not already there.
 func subscribe(c appengine.Context, f FeedInfo) error {
 	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-	return datastore.RunInTransaction(c, func(c appengine.Context) error {
+	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
 		u, err := getUserInfo(c)
 		if err != nil {
 			return err
@@ -50,6 +51,13 @@ func subscribe(c appengine.Context, f FeedInfo) error {
 		_, err = datastore.Put(c, userInfoKey(c), &u)
 		return err
 	}, &datastore.TransactionOptions{XG: true})
+
+	if err == nil && f.Refs == 1 {
+		c.Debugf("adding a task to refresh %s\n", key)
+		t := taskqueue.NewPOSTTask("/refresh", map[string][]string{"feed": {key.Encode()}})
+		_, err = taskqueue.Add(c, t, "")
+	}
+	return err
 }
 
 // Unsubscribe removes a feed from the user's feed list.
