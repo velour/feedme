@@ -185,8 +185,8 @@ func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (Articles, 
 	var articles Articles
 	var errs []error
 	for _, key := range uinfo.Feeds {
-		var f FeedInfo
-		if err := datastore.Get(c, key, &f); err != nil {
+		f, err := getFeed(c, key)
+		if err != nil {
 			err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
 			errs = append(errs, err)
 			continue
@@ -203,8 +203,8 @@ func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (Articles, 
 }
 
 func articlesByFeed(c appengine.Context, key *datastore.Key) (FeedInfo, Articles, []error) {
-	var f FeedInfo
-	if err := datastore.Get(c, key, &f); err != nil {
+	f, err := getFeed(c, key)
+	if err != nil {
 		err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
 		return FeedInfo{}, nil, []error{err}
 
@@ -392,8 +392,8 @@ func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
 
 func refresh(c appengine.Context, k *datastore.Key) error {
 	c.Debugf("refreshing %s\n", k)
-	var f FeedInfo
-	if err := datastore.Get(c, k, &f); err != nil {
+	f, err := getFeed(c, k)
+	if err != nil {
 		return errors.New(k.StringID() + " failed to load from the datastore: " + err.Error())
 	}
 	if err := f.ensureFresh(c); err != nil {

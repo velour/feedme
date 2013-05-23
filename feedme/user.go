@@ -51,18 +51,23 @@ func subscribe(c appengine.Context, f FeedInfo) error {
 		u.Feeds = append(u.Feeds, key)
 		return putUser(c, &u)
 	}, &datastore.TransactionOptions{XG: true})
+	if err != nil {
+		return err
+	}
 
-	if err == nil && f.Refs == 1 {
+	if f.Refs == 1 {
 		c.Debugf("adding a task to refresh %s\n", key)
 		t := taskqueue.NewPOSTTask("/refresh", map[string][]string{"feed": {key.Encode()}})
 		_, err = taskqueue.Add(c, t, "")
 	}
-	return err
+
+	return memcache.Gob.Set(c, &memcache.Item{Key: key.StringID(), Object: f})
 }
 
 // Unsubscribe removes a feed from the user's feed list.
 func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
-	return datastore.RunInTransaction(c, func(c appengine.Context) error {
+	var f FeedInfo
+	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
 		u, err := getUser(c)
 		if err != nil {
 			return err
@@ -79,7 +84,6 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 			return nil
 		}
 
-		var f FeedInfo
 		if err := datastore.Get(c, feedKey, &f); err != nil {
 			return err
 		}
@@ -99,6 +103,15 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 		u.Feeds = append(u.Feeds[:i], u.Feeds[i+1:]...)
 		return putUser(c, &u)
 	}, &datastore.TransactionOptions{XG: true})
+	if err != nil {
+		return err
+	}
+
+	if f.Refs <= 0 {
+		memcache.Delete(c, feedKey.StringID())
+		return nil
+	}
+	return memcache.Gob.Set(c, &memcache.Item{Key: feedKey.StringID(), Object: f})
 }
 
 func getUser(c appengine.Context) (UserInfo, error) {

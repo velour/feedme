@@ -3,6 +3,7 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/memcache"
 	"appengine/urlfetch"
 	"errors"
 	"github.com/velour/feedme/webfeed"
@@ -267,4 +268,38 @@ func checkUrl(c appengine.Context, url string) (FeedInfo, error) {
 		}
 	}
 	return FeedInfo{Url: url, Title: f.Title, Link: f.Link}, err
+}
+
+func getFeed(c appengine.Context, k *datastore.Key) (FeedInfo, error) {
+	var f FeedInfo
+	if _, err := memcache.Gob.Get(c, k.StringID(), &f); err == nil {
+		return f, nil
+	}
+
+	if err := datastore.Get(c, k, &f); err != nil {
+		return FeedInfo{}, err
+	}
+
+	err := memcache.Gob.Set(c, &memcache.Item{Key: k.StringID(), Object: f})
+	return f, err
+}
+
+// Update updates a feed in a transaction by calling u with the stored
+// version of the feed, and putting the feed returned by u.
+func (f *FeedInfo) update(c appengine.Context, u func(stored FeedInfo) FeedInfo) error {
+	k := datastore.NewKey(c, feedKind, f.Url, 0, nil)
+	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
+		var stored FeedInfo
+		err := datastore.Get(c, k, &stored)
+		if err != nil && err != datastore.ErrNoSuchEntity {
+			return err
+		}
+		*f = u(stored)
+		_, err = datastore.Put(c, k, f)
+		return err
+	}, nil)
+	if err != nil {
+		return err
+	}
+	return memcache.Gob.Set(c, &memcache.Item{Key: k.StringID(), Object: f})
 }
