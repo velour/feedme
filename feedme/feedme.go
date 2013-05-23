@@ -34,10 +34,12 @@ var (
 
 const (
 	latestDuration = 18 * time.Hour
+
+	managePage = "/manage"
 )
 
 func init() {
-	http.HandleFunc("/list", handleList)
+	http.HandleFunc(managePage, handleManage)
 	http.HandleFunc("/addopml", handleOpml)
 	http.HandleFunc("/update", handleUpdate)
 	http.HandleFunc("/refresh", handleRefresh)
@@ -71,8 +73,8 @@ func (u feedList) Swap(i, j int) {
 	u[i], u[j] = u[j], u[i]
 }
 
-func handleList(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/list" || r.Method != "GET" {
+func handleManage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
 		http.NotFound(w, r)
 		return
 	}
@@ -131,12 +133,12 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(uinfo.Feeds) == 0 {
-		http.Redirect(w, r, "/list", http.StatusFound)
+	if len(uinfo.Feeds) == 0 && (r.URL.Path == "/" || r.URL.Path == "/all") {
+		http.Redirect(w, r, managePage, http.StatusFound)
 		return
 	}
 
-	var feedPage = struct {
+	var page = struct {
 		Logout   string
 		Title    string
 		Link     string
@@ -144,50 +146,44 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		Articles Articles
 	}{}
 
-	feedPage.Logout, err = user.LogoutURL(c, "/")
+	page.Logout, err = user.LogoutURL(c, "/")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if r.URL.Path == "/" {
-		feedPage.Title = "Latest Articles"
-		feedPage.Articles, feedPage.Errors = articlesSince(c, uinfo, time.Now().Add(-latestDuration))
-	} else if r.URL.Path == "/all" {
-		feedPage.Title = "All Articles"
-		feedPage.Articles, feedPage.Errors = articlesSince(c, uinfo, time.Time{})
-	} else {
+	switch r.URL.Path {
+	case "/":
+		page.Title = "Latest Articles"
+		page.Articles, page.Errors = articlesSince(c, uinfo, time.Now().Add(-latestDuration))
+	case "/all":
+		page.Title = "All Articles"
+		page.Articles, page.Errors = articlesSince(c, uinfo, time.Time{})
+
+	default:
 		var key *datastore.Key
 		var err error
 		if key, err = datastore.DecodeKey(path.Base(r.URL.Path)); err != nil {
 			http.NotFound(w, r)
 			return
 		}
-
 		var f FeedInfo
-		if err = datastore.Get(c, key, &f); err != nil {
-			err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
-			feedPage.Errors = []error{err}
-
-		} else {
-			feedPage.Title = f.Title
-			feedPage.Link = f.Link
-			feedPage.Articles, err = f.articlesSince(c, time.Time{})
-			if err != nil {
-				feedPage.Errors = []error{err}
-			}
-		}
+		f, page.Articles, page.Errors = articlesByFeed(c, key)
+		page.Title = f.Title
+		page.Link = f.Link
 	}
 
-	c.Debugf("%d articles\n", len(feedPage.Articles))
-	sort.Sort(feedPage.Articles)
+	c.Debugf("%d articles\n", len(page.Articles))
+	sort.Sort(page.Articles)
 
-	if err := templates.ExecuteTemplate(w, "articles.html", feedPage); err != nil {
+	if err := templates.ExecuteTemplate(w, "articles.html", page); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (articles Articles, errs []error) {
+func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (Articles, []error) {
+	var articles Articles
+	var errs []error
 	for _, key := range uinfo.Feeds {
 		var f FeedInfo
 		if err := datastore.Get(c, key, &f); err != nil {
@@ -203,7 +199,22 @@ func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (articles A
 		}
 		articles = append(articles, as...)
 	}
-	return
+	return articles, errs
+}
+
+func articlesByFeed(c appengine.Context, key *datastore.Key) (FeedInfo, Articles, []error) {
+	var f FeedInfo
+	if err := datastore.Get(c, key, &f); err != nil {
+		err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
+		return FeedInfo{}, nil, []error{err}
+
+	}
+	as, err := f.articlesSince(c, time.Time{})
+	var errs []error
+	if err != nil {
+		errs = []error{err}
+	}
+	return f, as, errs
 }
 
 type Outline struct {
@@ -252,7 +263,7 @@ func handleOpml(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	http.Redirect(w, r, "/list", http.StatusFound)
+	http.Redirect(w, r, managePage, http.StatusFound)
 }
 
 func opmlWalk(r *Outline, urls []string) []string {
@@ -332,7 +343,7 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/list", http.StatusFound)
+	http.Redirect(w, r, managePage, http.StatusFound)
 }
 
 func handleRefresh(w http.ResponseWriter, r *http.Request) {
