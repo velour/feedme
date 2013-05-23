@@ -136,7 +136,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var feedPage = struct {
+	var page = struct {
 		Logout   string
 		Title    string
 		Link     string
@@ -144,18 +144,18 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		Articles Articles
 	}{}
 
-	feedPage.Logout, err = user.LogoutURL(c, "/")
+	page.Logout, err = user.LogoutURL(c, "/")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if r.URL.Path == "/" {
-		feedPage.Title = "Latest Articles"
-		feedPage.Articles, feedPage.Errors = articlesSince(c, uinfo, time.Now().Add(-latestDuration))
+		page.Title = "Latest Articles"
+		page.Articles, page.Errors = articlesSince(c, uinfo, time.Now().Add(-latestDuration))
 	} else if r.URL.Path == "/all" {
-		feedPage.Title = "All Articles"
-		feedPage.Articles, feedPage.Errors = articlesSince(c, uinfo, time.Time{})
+		page.Title = "All Articles"
+		page.Articles, page.Errors = articlesSince(c, uinfo, time.Time{})
 	} else {
 		var key *datastore.Key
 		var err error
@@ -163,31 +163,23 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 			http.NotFound(w, r)
 			return
 		}
-
 		var f FeedInfo
-		if err = datastore.Get(c, key, &f); err != nil {
-			err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
-			feedPage.Errors = []error{err}
-
-		} else {
-			feedPage.Title = f.Title
-			feedPage.Link = f.Link
-			feedPage.Articles, err = f.articlesSince(c, time.Time{})
-			if err != nil {
-				feedPage.Errors = []error{err}
-			}
-		}
+		f, page.Articles, page.Errors = articlesByFeed(c, key)
+		page.Title = f.Title
+		page.Link = f.Link
 	}
 
-	c.Debugf("%d articles\n", len(feedPage.Articles))
-	sort.Sort(feedPage.Articles)
+	c.Debugf("%d articles\n", len(page.Articles))
+	sort.Sort(page.Articles)
 
-	if err := templates.ExecuteTemplate(w, "articles.html", feedPage); err != nil {
+	if err := templates.ExecuteTemplate(w, "articles.html", page); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 
-func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (articles Articles, errs []error) {
+func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (Articles, []error) {
+	var articles Articles
+	var errs []error
 	for _, key := range uinfo.Feeds {
 		var f FeedInfo
 		if err := datastore.Get(c, key, &f); err != nil {
@@ -203,7 +195,22 @@ func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (articles A
 		}
 		articles = append(articles, as...)
 	}
-	return
+	return articles, errs
+}
+
+func articlesByFeed(c appengine.Context, key *datastore.Key) (FeedInfo, Articles, []error) {
+	var f FeedInfo
+	if err := datastore.Get(c, key, &f); err != nil {
+		err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
+		return FeedInfo{}, nil, []error{err}
+
+	}
+	as, err := f.articlesSince(c, time.Time{})
+	var errs []error
+	if err != nil {
+		errs = []error{err}
+	}
+	return f, as, errs
 }
 
 type Outline struct {
