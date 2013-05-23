@@ -3,6 +3,7 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/memcache"
 	"appengine/user"
 	"encoding/xml"
 	"errors"
@@ -36,6 +37,10 @@ const (
 	latestDuration = 18 * time.Hour
 
 	managePage = "/manage"
+
+	// McacheFeedsKey is the memcache key used to access the cached
+	// slice of all feed keys.
+	mcacheFeedsKey = "mcacheFeedsKey"
 )
 
 func init() {
@@ -370,29 +375,58 @@ func handleRefresh(w http.ResponseWriter, r *http.Request) {
 
 func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
 	var errs errorList
-	c := appengine.NewContext(r)
-	for it := datastore.NewQuery(feedKind).KeysOnly().Run(c); ; {
-		k, err := it.Next(nil)
-		if err == datastore.Done {
-			break
-		} else if err != nil {
-			errs = append(errs, err)
-			continue
+	defer func() {
+		if len(errs) > 0 {
+			http.Error(w, errs.Error(), http.StatusInternalServerError)
 		}
+	}()
+
+	c := appengine.NewContext(r)
+
+	var keys []*datastore.Key
+	var encKeys []string
+	if _, err := memcache.Gob.Get(c, mcacheFeedsKey, &encKeys); err == nil {
+		for _, e := range encKeys {
+			k, err := datastore.DecodeKey(e)
+			if err != nil {
+				keys = nil
+				break
+			}
+			keys = append(keys, k)
+		}
+	}
+
+	if len(keys) == 0 {
+		var err error
+		keys, err = datastore.NewQuery(feedKind).KeysOnly().GetAll(c, nil)
+		if err != nil {
+			errs = append(errs, err)
+			return
+		}
+
+		for _, k := range keys {
+			encKeys = append(encKeys, k.Encode())
+		}
+
+		item := memcache.Item{Key: mcacheFeedsKey, Object: encKeys}
+		if err := memcache.Gob.Set(c, &item); err != nil {
+			c.Debugf("Error setting memcache feed item: %s\n", err.Error())
+		}
+	}
+
+	for _, k := range keys {
 		if err := refresh(c, k); err != nil {
 			errs = append(errs, err)
 		}
 	}
-
-	if len(errs) > 0 {
-		http.Error(w, errs.Error(), http.StatusInternalServerError)
-	}
-	return
 }
 
 func refresh(c appengine.Context, k *datastore.Key) error {
 	c.Debugf("refreshing %s\n", k)
 	f, err := getFeed(c, k)
+	if err == datastore.ErrNoSuchEntity {
+		return nil
+	}
 	if err != nil {
 		return errors.New(k.StringID() + " failed to load from the datastore: " + err.Error())
 	}
