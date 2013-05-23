@@ -3,6 +3,7 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/memcache"
 	"appengine/taskqueue"
 	"appengine/user"
 	"fmt"
@@ -101,17 +102,29 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 }
 
 func getUser(c appengine.Context) (UserInfo, error) {
-	var uinfo UserInfo
-	k := datastore.NewKey(c, userKind, user.Current(c).String(), 0, nil)
-	err := datastore.Get(c, k, &uinfo)
-	if err == datastore.ErrNoSuchEntity {
-		err = nil
+	id := user.Current(c).String()
+
+	var u UserInfo
+	if _, err := memcache.Gob.Get(c, id, &u); err == nil {
+		return u, nil
 	}
-	return uinfo, err
+
+	k := datastore.NewKey(c, userKind, id, 0, nil)
+	err := datastore.Get(c, k, &u)
+	if err != nil && err != datastore.ErrNoSuchEntity {
+		return u, err
+	}
+
+	err = memcache.Gob.Set(c, &memcache.Item{Key: id, Object: u})
+	return u, err
 }
 
 func putUser(c appengine.Context, u *UserInfo) error {
-	k := datastore.NewKey(c, userKind, user.Current(c).String(), 0, nil)
-	_, err := datastore.Put(c, k, u)
-	return err
+	id := user.Current(c).String()
+	k := datastore.NewKey(c, userKind, id, 0, nil)
+	if _, err := datastore.Put(c, k, u); err != nil {
+		return err
+	}
+
+	return memcache.Gob.Set(c, &memcache.Item{Key: id, Object: u})
 }
