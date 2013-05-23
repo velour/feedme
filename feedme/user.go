@@ -23,7 +23,7 @@ type UserInfo struct {
 func subscribe(c appengine.Context, f FeedInfo) error {
 	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
 	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
-		u, err := getUserInfo(c)
+		u, err := getUser(c)
 		if err != nil {
 			return err
 		}
@@ -48,8 +48,7 @@ func subscribe(c appengine.Context, f FeedInfo) error {
 		}
 
 		u.Feeds = append(u.Feeds, key)
-		_, err = datastore.Put(c, userInfoKey(c), &u)
-		return err
+		return putUser(c, &u)
 	}, &datastore.TransactionOptions{XG: true})
 
 	if err == nil && f.Refs == 1 {
@@ -63,7 +62,7 @@ func subscribe(c appengine.Context, f FeedInfo) error {
 // Unsubscribe removes a feed from the user's feed list.
 func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 	return datastore.RunInTransaction(c, func(c appengine.Context) error {
-		u, err := getUserInfo(c)
+		u, err := getUser(c)
 		if err != nil {
 			return err
 		}
@@ -97,24 +96,22 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 		}
 
 		u.Feeds = append(u.Feeds[:i], u.Feeds[i+1:]...)
-		_, err = datastore.Put(c, userInfoKey(c), &u)
-		return err
+		return putUser(c, &u)
 	}, &datastore.TransactionOptions{XG: true})
 }
 
-// getUserInfo returns the UserInfo for the currently logged in user.
-// This function assumes that a user is loged in, otherwise it will panic.
-func getUserInfo(c appengine.Context) (UserInfo, error) {
+func getUser(c appengine.Context) (UserInfo, error) {
 	var uinfo UserInfo
-	err := datastore.Get(c, userInfoKey(c), &uinfo)
-	if err != nil && err != datastore.ErrNoSuchEntity {
-		return UserInfo{}, err
+	k := datastore.NewKey(c, userKind, user.Current(c).String(), 0, nil)
+	err := datastore.Get(c, k, &uinfo)
+	if err == datastore.ErrNoSuchEntity {
+		err = nil
 	}
-	return uinfo, nil
+	return uinfo, err
 }
 
-// UserInfoKey returns the key for the current user's UserInfo.
-// This function assumes that a user is loged in, otherwise it will panic.
-func userInfoKey(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, userKind, user.Current(c).String(), 0, nil)
+func putUser(c appengine.Context, u *UserInfo) error {
+	k := datastore.NewKey(c, userKind, user.Current(c).String(), 0, nil)
+	_, err := datastore.Put(c, k, u)
+	return err
 }

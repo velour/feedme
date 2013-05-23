@@ -90,7 +90,7 @@ func handleManage(w http.ResponseWriter, r *http.Request) {
 	page.Title = "Feeds"
 
 	var err error
-	page.User, err = getUserInfo(c)
+	page.User, err = getUser(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -127,7 +127,7 @@ func handleManage(w http.ResponseWriter, r *http.Request) {
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
-	uinfo, err := getUserInfo(c)
+	uinfo, err := getUser(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -293,7 +293,7 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := appengine.NewContext(r)
-	u, err := getUserInfo(c)
+	u, err := getUser(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
