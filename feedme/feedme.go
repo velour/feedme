@@ -3,9 +3,9 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
-	"appengine/taskqueue"
 	"appengine/user"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -359,16 +359,8 @@ func handleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := appengine.NewContext(r)
-	c.Debugf("refreshing %s\n", k)
-
-	var f FeedInfo
-	if err = datastore.Get(c, k, &f); err != nil {
-		http.Error(w, k.StringID()+" failed to load from the datastore: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err = f.ensureFresh(c); err != nil {
-		http.Error(w, f.Url+" failed to refresh: "+err.Error(), http.StatusInternalServerError)
+	if err := refresh(c, k); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -387,10 +379,7 @@ func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
 			errs = append(errs, err)
 			continue
 		}
-
-		c.Debugf("adding a task to refresh %s\n", k)
-		t := taskqueue.NewPOSTTask("/refresh", map[string][]string{"feed": {k.Encode()}})
-		if _, err := taskqueue.Add(c, t, ""); err != nil {
+		if err := refresh(c, k); err != nil {
 			errs = append(errs, err)
 		}
 	}
@@ -399,4 +388,16 @@ func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errs.Error(), http.StatusInternalServerError)
 	}
 	return
+}
+
+func refresh(c appengine.Context, k *datastore.Key) error {
+	c.Debugf("refreshing %s\n", k)
+	var f FeedInfo
+	if err := datastore.Get(c, k, &f); err != nil {
+		return errors.New(k.StringID() + " failed to load from the datastore: " + err.Error())
+	}
+	if err := f.ensureFresh(c); err != nil {
+		return errors.New(f.Url + " failed to refresh: " + err.Error())
+	}
+	return nil
 }
