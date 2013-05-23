@@ -1,6 +1,6 @@
 <nav>
 <a href="{{.Logout}}">Logout</a>
-{{if stringEq .Title "Feeds" | not}}<a href="/list">Manage</a>{{end}}
+{{if stringEq .Title "Feeds" | not}}<a href="/manage">Manage</a>{{end}}
 {{if stringEq .Title "Latest Articles" | not}}<a href="/">Latest</a>{{end}}
 {{if stringEq .Title "All Articles" | not}}<a href="/all">All</a>{{end}}
 <a href="javascript:feedme.collapseAll()">Collapse</a>

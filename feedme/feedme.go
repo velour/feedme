@@ -34,10 +34,12 @@ var (
 
 const (
 	latestDuration = 18 * time.Hour
+
+	managePage = "/manage"
 )
 
 func init() {
-	http.HandleFunc("/list", handleList)
+	http.HandleFunc(managePage, handleManage)
 	http.HandleFunc("/addopml", handleOpml)
 	http.HandleFunc("/update", handleUpdate)
 	http.HandleFunc("/refresh", handleRefresh)
@@ -71,8 +73,8 @@ func (u feedList) Swap(i, j int) {
 	u[i], u[j] = u[j], u[i]
 }
 
-func handleList(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/list" || r.Method != "GET" {
+func handleManage(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
 		http.NotFound(w, r)
 		return
 	}
@@ -132,7 +134,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(uinfo.Feeds) == 0 && (r.URL.Path == "/" || r.URL.Path == "/all") {
-		http.Redirect(w, r, "/list", http.StatusFound)
+		http.Redirect(w, r, managePage, http.StatusFound)
 		return
 	}
 
@@ -261,7 +263,7 @@ func handleOpml(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	http.Redirect(w, r, "/list", http.StatusFound)
+	http.Redirect(w, r, managePage, http.StatusFound)
 }
 
 func opmlWalk(r *Outline, urls []string) []string {
@@ -341,7 +343,7 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/list", http.StatusFound)
+	http.Redirect(w, r, managePage, http.StatusFound)
 }
 
 func handleRefresh(w http.ResponseWriter, r *http.Request) {
