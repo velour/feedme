@@ -150,13 +150,15 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.URL.Path == "/" {
+	switch r.URL.Path {
+	case "/":
 		page.Title = "Latest Articles"
 		page.Articles, page.Errors = articlesSince(c, uinfo, time.Now().Add(-latestDuration))
-	} else if r.URL.Path == "/all" {
+	case "/all":
 		page.Title = "All Articles"
 		page.Articles, page.Errors = articlesSince(c, uinfo, time.Time{})
-	} else {
+
+	default:
 		var key *datastore.Key
 		var err error
 		if key, err = datastore.DecodeKey(path.Base(r.URL.Path)); err != nil {
