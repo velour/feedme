@@ -131,7 +131,7 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(uinfo.Feeds) == 0 {
+	if len(uinfo.Feeds) == 0 && (r.URL.Path == "/" || r.URL.Path == "/all") {
 		http.Redirect(w, r, "/list", http.StatusFound)
 		return
 	}
