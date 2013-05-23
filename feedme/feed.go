@@ -74,17 +74,6 @@ type FeedInfo struct {
 	LastFetch time.Time `datastore:",noindex"`
 }
 
-// GetArticles returns all articles for a feed, refreshing it if necessary.
-func (f FeedInfo) articlesSince(c appengine.Context, t time.Time) (articles Articles, err error) {
-	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-	if t.IsZero() {
-		_, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles)
-	} else {
-		_, err = datastore.NewQuery(articleKind).Ancestor(key).Filter("When >=", t).GetAll(c, &articles)
-	}
-	return
-}
-
 // EnsureFresh refreshes the feed only if it is stale.
 func (f *FeedInfo) ensureFresh(c appengine.Context) error {
 	if time.Since(f.LastFetch) > maxCacheDuration {
@@ -124,6 +113,17 @@ func (f *FeedInfo) refresh(c appengine.Context) error {
 	}
 
 	return f.updateArticles(c, articles)
+}
+
+// GetArticles returns all articles for a feed, refreshing it if necessary.
+func (f FeedInfo) articlesSince(c appengine.Context, t time.Time) (articles Articles, err error) {
+	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
+	if t.IsZero() {
+		_, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles)
+	} else {
+		_, err = datastore.NewQuery(articleKind).Ancestor(key).Filter("When >=", t).GetAll(c, &articles)
+	}
+	return
 }
 
 // ReadSource returns the feed title and articles read from the source.
