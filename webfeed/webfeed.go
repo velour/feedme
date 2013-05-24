@@ -5,9 +5,11 @@ import (
 	"encoding/xml"
 	"errors"
 	"io"
+	"net/url"
 	"time"
 
 	"code.google.com/p/go.net/html"
+	"code.google.com/p/go.net/html/atom"
 )
 
 type Feed struct {
@@ -75,8 +77,8 @@ func rssFeed(r rss) (Feed, error) {
 		ent := Entry{
 			Title:   it.Title,
 			Link:    it.Link,
-			Summary: fixHtml(it.Description),
-			Content: fixHtml(it.Content.Data),
+			Summary: fixHtml(it.Link, it.Description),
+			Content: fixHtml(it.Link, it.Content.Data),
 			When:    when,
 		}
 		f.Entries = append(f.Entries, ent)
@@ -119,11 +121,11 @@ func atomFeed(a feed) (Feed, error) {
 		e := Entry{
 			Title:   ent.Title,
 			Link:    ent.Link.Href,
-			Summary: fixHtml(ent.Summary),
+			Summary: fixHtml(ent.Link.Href, ent.Summary),
 			When:    ent.Updated,
 		}
 		if len(ent.Content) > 0 {
-			e.Content = fixHtml(ent.Content[0].Data())
+			e.Content = fixHtml(ent.Link.Href, ent.Content[0].Data())
 		}
 		f.Entries = append(f.Entries, e)
 	}
@@ -218,11 +220,13 @@ type rssContent struct {
 
 // FixHtml parses bytes as HTML and returns well-formed HTML if the parse
 // was successful, or escaped HTML, if not.
-func fixHtml(wild []byte) (well []byte) {
+func fixHtml(linkUrl string, wild []byte) (well []byte) {
 	n, err := html.Parse(bytes.NewReader(wild))
 	if err != nil {
 		return []byte(html.EscapeString(string(wild)))
 	}
+
+	fixImgs(linkUrl, n)
 
 	defer func() {
 		if err := recover(); err == bytes.ErrTooLarge {
@@ -250,4 +254,37 @@ func fixHtml(wild []byte) (well []byte) {
 		return []byte(html.EscapeString(string(wild)))
 	}
 	return well[:i]
+}
+
+// FixImgs makes the source URLs of image absolute given to the link URL.
+// This fixes feeds that specify their images using relative URLs.
+func fixImgs(link string, n *html.Node) {
+	u, err := url.Parse(link)
+	if err != nil {
+		return
+	}
+
+	walk(n, func(n *html.Node) {
+		if n.Type != html.ElementNode || n.DataAtom != atom.Img {
+			return
+		}
+		for i, a := range n.Attr {
+			if a.Key != "src" || len(a.Val) == 0 {
+				continue
+			}
+			src, err := u.Parse(a.Val)
+			if err != nil {
+				continue
+			}
+			a.Val = src.String()
+			n.Attr[i] = a
+		}
+	})
+}
+
+func walk(root *html.Node, f func(*html.Node)) {
+	f(root)
+	for c := root.FirstChild; c != nil; c = c.NextSibling {
+		walk(c, f)
+	}
 }
