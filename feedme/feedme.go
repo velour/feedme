@@ -374,14 +374,19 @@ func handleRefresh(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
+	c := appengine.NewContext(r)
+
 	var errs errorList
 	defer func() {
 		if len(errs) > 0 {
+			c.Debugf("Returning errors: %s\n", errs.Error())
 			http.Error(w, errs.Error(), http.StatusInternalServerError)
+			return
 		}
+		c.Debugf("Returning successfully\n")
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusResetContent)
 	}()
-
-	c := appengine.NewContext(r)
 
 	var keys []*datastore.Key
 	var encKeys []string
@@ -419,13 +424,6 @@ func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
 			errs = append(errs, err)
 		}
 	}
-	if len(errs) > 0 {
-		http.Error(w, errs.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusResetContent)
 }
 
 func refresh(c appengine.Context, k *datastore.Key) error {
