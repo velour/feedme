@@ -327,5 +327,5 @@ func (f *FeedInfo) update(c appengine.Context, u func(stored FeedInfo) FeedInfo)
 	if err != nil {
 		return err
 	}
-	return cacheSetFeed(c, k, f)
+	return cacheSetFeed(c, k, *f)
 }
