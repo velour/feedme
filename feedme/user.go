@@ -3,6 +3,7 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/memcache"
 	"appengine/taskqueue"
 	"appengine/user"
 	"fmt"
@@ -23,7 +24,7 @@ type UserInfo struct {
 func subscribe(c appengine.Context, f FeedInfo) error {
 	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
 	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
-		u, err := getUserInfo(c)
+		u, err := getUser(c)
 		if err != nil {
 			return err
 		}
@@ -48,22 +49,27 @@ func subscribe(c appengine.Context, f FeedInfo) error {
 		}
 
 		u.Feeds = append(u.Feeds, key)
-		_, err = datastore.Put(c, userInfoKey(c), &u)
-		return err
+		return putUser(c, &u)
 	}, &datastore.TransactionOptions{XG: true})
+	if err != nil {
+		return err
+	}
 
-	if err == nil && f.Refs == 1 {
+	if f.Refs == 1 {
+		memcache.Delete(c, mcacheFeedsKey)
 		c.Debugf("adding a task to refresh %s\n", key)
 		t := taskqueue.NewPOSTTask("/refresh", map[string][]string{"feed": {key.Encode()}})
 		_, err = taskqueue.Add(c, t, "")
 	}
-	return err
+
+	return memcache.Gob.Set(c, &memcache.Item{Key: key.StringID(), Object: f})
 }
 
 // Unsubscribe removes a feed from the user's feed list.
 func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
-	return datastore.RunInTransaction(c, func(c appengine.Context) error {
-		u, err := getUserInfo(c)
+	var f FeedInfo
+	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
+		u, err := getUser(c)
 		if err != nil {
 			return err
 		}
@@ -79,7 +85,6 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 			return nil
 		}
 
-		var f FeedInfo
 		if err := datastore.Get(c, feedKey, &f); err != nil {
 			return err
 		}
@@ -97,24 +102,44 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 		}
 
 		u.Feeds = append(u.Feeds[:i], u.Feeds[i+1:]...)
-		_, err = datastore.Put(c, userInfoKey(c), &u)
-		return err
+		return putUser(c, &u)
 	}, &datastore.TransactionOptions{XG: true})
-}
-
-// getUserInfo returns the UserInfo for the currently logged in user.
-// This function assumes that a user is loged in, otherwise it will panic.
-func getUserInfo(c appengine.Context) (UserInfo, error) {
-	var uinfo UserInfo
-	err := datastore.Get(c, userInfoKey(c), &uinfo)
-	if err != nil && err != datastore.ErrNoSuchEntity {
-		return UserInfo{}, err
+	if err != nil {
+		return err
 	}
-	return uinfo, nil
+
+	if f.Refs <= 0 {
+		memcache.Delete(c, mcacheFeedsKey)
+		memcache.Delete(c, feedKey.StringID())
+		return nil
+	}
+	return memcache.Gob.Set(c, &memcache.Item{Key: feedKey.StringID(), Object: f})
 }
 
-// UserInfoKey returns the key for the current user's UserInfo.
-// This function assumes that a user is loged in, otherwise it will panic.
-func userInfoKey(c appengine.Context) *datastore.Key {
-	return datastore.NewKey(c, userKind, user.Current(c).String(), 0, nil)
+func getUser(c appengine.Context) (UserInfo, error) {
+	id := user.Current(c).String()
+
+	var u UserInfo
+	if _, err := memcache.Gob.Get(c, id, &u); err == nil {
+		return u, nil
+	}
+
+	k := datastore.NewKey(c, userKind, id, 0, nil)
+	err := datastore.Get(c, k, &u)
+	if err != nil && err != datastore.ErrNoSuchEntity {
+		return u, err
+	}
+
+	err = memcache.Gob.Set(c, &memcache.Item{Key: id, Object: u})
+	return u, err
+}
+
+func putUser(c appengine.Context, u *UserInfo) error {
+	id := user.Current(c).String()
+	k := datastore.NewKey(c, userKind, id, 0, nil)
+	if _, err := datastore.Put(c, k, u); err != nil {
+		return err
+	}
+
+	return memcache.Gob.Set(c, &memcache.Item{Key: id, Object: u})
 }

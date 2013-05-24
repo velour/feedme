@@ -3,9 +3,10 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
-	"appengine/taskqueue"
+	"appengine/memcache"
 	"appengine/user"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -36,6 +37,10 @@ const (
 	latestDuration = 18 * time.Hour
 
 	managePage = "/manage"
+
+	// McacheFeedsKey is the memcache key used to access the cached
+	// slice of all feed keys.
+	mcacheFeedsKey = "mcacheFeedsKey"
 )
 
 func init() {
@@ -90,7 +95,7 @@ func handleManage(w http.ResponseWriter, r *http.Request) {
 	page.Title = "Feeds"
 
 	var err error
-	page.User, err = getUserInfo(c)
+	page.User, err = getUser(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -127,7 +132,7 @@ func handleManage(w http.ResponseWriter, r *http.Request) {
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	c := appengine.NewContext(r)
 
-	uinfo, err := getUserInfo(c)
+	uinfo, err := getUser(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -185,8 +190,8 @@ func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (Articles, 
 	var articles Articles
 	var errs []error
 	for _, key := range uinfo.Feeds {
-		var f FeedInfo
-		if err := datastore.Get(c, key, &f); err != nil {
+		f, err := getFeed(c, key)
+		if err != nil {
 			err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
 			errs = append(errs, err)
 			continue
@@ -203,8 +208,8 @@ func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (Articles, 
 }
 
 func articlesByFeed(c appengine.Context, key *datastore.Key) (FeedInfo, Articles, []error) {
-	var f FeedInfo
-	if err := datastore.Get(c, key, &f); err != nil {
+	f, err := getFeed(c, key)
+	if err != nil {
 		err = fmt.Errorf("%s: failed to load from the datastore: %s", key.StringID(), err.Error())
 		return FeedInfo{}, nil, []error{err}
 
@@ -293,7 +298,7 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := appengine.NewContext(r)
-	u, err := getUserInfo(c)
+	u, err := getUser(c)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -359,16 +364,8 @@ func handleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c := appengine.NewContext(r)
-	c.Debugf("refreshing %s\n", k)
-
-	var f FeedInfo
-	if err = datastore.Get(c, k, &f); err != nil {
-		http.Error(w, k.StringID()+" failed to load from the datastore: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	if err = f.ensureFresh(c); err != nil {
-		http.Error(w, f.Url+" failed to refresh: "+err.Error(), http.StatusInternalServerError)
+	if err := refresh(c, k); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -378,25 +375,63 @@ func handleRefresh(w http.ResponseWriter, r *http.Request) {
 
 func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
 	var errs errorList
+	defer func() {
+		if len(errs) > 0 {
+			http.Error(w, errs.Error(), http.StatusInternalServerError)
+		}
+	}()
+
 	c := appengine.NewContext(r)
-	for it := datastore.NewQuery(feedKind).KeysOnly().Run(c); ; {
-		k, err := it.Next(nil)
-		if err == datastore.Done {
-			break
-		} else if err != nil {
-			errs = append(errs, err)
-			continue
-		}
 
-		c.Debugf("adding a task to refresh %s\n", k)
-		t := taskqueue.NewPOSTTask("/refresh", map[string][]string{"feed": {k.Encode()}})
-		if _, err := taskqueue.Add(c, t, ""); err != nil {
-			errs = append(errs, err)
+	var keys []*datastore.Key
+	var encKeys []string
+	if _, err := memcache.Gob.Get(c, mcacheFeedsKey, &encKeys); err == nil {
+		for _, e := range encKeys {
+			k, err := datastore.DecodeKey(e)
+			if err != nil {
+				keys = nil
+				break
+			}
+			keys = append(keys, k)
 		}
 	}
 
-	if len(errs) > 0 {
-		http.Error(w, errs.Error(), http.StatusInternalServerError)
+	if len(keys) == 0 {
+		var err error
+		keys, err = datastore.NewQuery(feedKind).KeysOnly().GetAll(c, nil)
+		if err != nil {
+			errs = append(errs, err)
+			return
+		}
+
+		for _, k := range keys {
+			encKeys = append(encKeys, k.Encode())
+		}
+
+		item := memcache.Item{Key: mcacheFeedsKey, Object: encKeys}
+		if err := memcache.Gob.Set(c, &item); err != nil {
+			c.Debugf("Error setting memcache feed item: %s\n", err.Error())
+		}
 	}
-	return
+
+	for _, k := range keys {
+		if err := refresh(c, k); err != nil {
+			errs = append(errs, err)
+		}
+	}
+}
+
+func refresh(c appengine.Context, k *datastore.Key) error {
+	c.Debugf("refreshing %s\n", k)
+	f, err := getFeed(c, k)
+	if err == datastore.ErrNoSuchEntity {
+		return nil
+	}
+	if err != nil {
+		return errors.New(k.StringID() + " failed to load from the datastore: " + err.Error())
+	}
+	if err := f.ensureFresh(c); err != nil {
+		return errors.New(f.Url + " failed to refresh: " + err.Error())
+	}
+	return nil
 }

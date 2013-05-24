@@ -3,6 +3,7 @@ package feedme
 import (
 	"appengine"
 	"appengine/datastore"
+	"appengine/memcache"
 	"appengine/urlfetch"
 	"errors"
 	"github.com/velour/feedme/webfeed"
@@ -74,17 +75,6 @@ type FeedInfo struct {
 	LastFetch time.Time `datastore:",noindex"`
 }
 
-// GetArticles returns all articles for a feed, refreshing it if necessary.
-func (f FeedInfo) articlesSince(c appengine.Context, t time.Time) (articles Articles, err error) {
-	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-	if t.IsZero() {
-		_, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles)
-	} else {
-		_, err = datastore.NewQuery(articleKind).Ancestor(key).Filter("When >=", t).GetAll(c, &articles)
-	}
-	return
-}
-
 // EnsureFresh refreshes the feed only if it is stale.
 func (f *FeedInfo) ensureFresh(c appengine.Context) error {
 	if time.Since(f.LastFetch) > maxCacheDuration {
@@ -124,6 +114,17 @@ func (f *FeedInfo) refresh(c appengine.Context) error {
 	}
 
 	return f.updateArticles(c, articles)
+}
+
+// GetArticles returns all articles for a feed, refreshing it if necessary.
+func (f FeedInfo) articlesSince(c appengine.Context, t time.Time) (articles Articles, err error) {
+	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
+	if t.IsZero() {
+		_, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles)
+	} else {
+		_, err = datastore.NewQuery(articleKind).Ancestor(key).Filter("When >=", t).GetAll(c, &articles)
+	}
+	return
 }
 
 // ReadSource returns the feed title and articles read from the source.
@@ -267,4 +268,38 @@ func checkUrl(c appengine.Context, url string) (FeedInfo, error) {
 		}
 	}
 	return FeedInfo{Url: url, Title: f.Title, Link: f.Link}, err
+}
+
+func getFeed(c appengine.Context, k *datastore.Key) (FeedInfo, error) {
+	var f FeedInfo
+	if _, err := memcache.Gob.Get(c, k.StringID(), &f); err == nil {
+		return f, nil
+	}
+
+	if err := datastore.Get(c, k, &f); err != nil {
+		return FeedInfo{}, err
+	}
+
+	err := memcache.Gob.Set(c, &memcache.Item{Key: k.StringID(), Object: f})
+	return f, err
+}
+
+// Update updates a feed in a transaction by calling u with the stored
+// version of the feed, and putting the feed returned by u.
+func (f *FeedInfo) update(c appengine.Context, u func(stored FeedInfo) FeedInfo) error {
+	k := datastore.NewKey(c, feedKind, f.Url, 0, nil)
+	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
+		var stored FeedInfo
+		err := datastore.Get(c, k, &stored)
+		if err != nil && err != datastore.ErrNoSuchEntity {
+			return err
+		}
+		*f = u(stored)
+		_, err = datastore.Put(c, k, f)
+		return err
+	}, nil)
+	if err != nil {
+		return err
+	}
+	return memcache.Gob.Set(c, &memcache.Item{Key: k.StringID(), Object: f})
 }
