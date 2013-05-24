@@ -21,8 +21,16 @@ const (
 	// new articles from a feed.
 	maxNewArticles = 10
 
+	// McacheKeyMax is the maximum key length for memcache.
+	mcacheKeyMax = 250
+
 	articleKind = "Article"
 	feedKind    = "Feed"
+)
+
+var (
+	// ErrKeyTooBig is returned if the key is too big for the memcache.
+	ErrKeyTooBig = errors.New("Memcache key is too big")
 )
 
 // An Article is a single article from a feed.
@@ -271,8 +279,8 @@ func checkUrl(c appengine.Context, url string) (FeedInfo, error) {
 }
 
 func getFeed(c appengine.Context, k *datastore.Key) (FeedInfo, error) {
-	var f FeedInfo
-	if _, err := memcache.Gob.Get(c, k.StringID(), &f); err == nil {
+	f, err := cacheGetFeed(c, k)
+	if err == nil {
 		return f, nil
 	}
 
@@ -280,8 +288,26 @@ func getFeed(c appengine.Context, k *datastore.Key) (FeedInfo, error) {
 		return FeedInfo{}, err
 	}
 
-	err := memcache.Gob.Set(c, &memcache.Item{Key: k.StringID(), Object: f})
+	return f, cacheSetFeed(c, k, f)
+}
+
+func cacheGetFeed(c appengine.Context, k *datastore.Key) (FeedInfo, error) {
+	id := k.StringID()
+	if len(id) > mcacheKeyMax {
+		return FeedInfo{}, ErrKeyTooBig
+	}
+	var f FeedInfo
+	_, err := memcache.Gob.Get(c, id, &f)
 	return f, err
+}
+
+func cacheSetFeed(c appengine.Context, k *datastore.Key, f FeedInfo) error {
+	id := k.StringID()
+	if len(id) > mcacheKeyMax { // silently don't set the value
+		c.Debugf("Silently not caching feed with a big key: %s", id)
+		return nil
+	}
+	return memcache.Gob.Set(c, &memcache.Item{Key: k.StringID(), Object: f})
 }
 
 // Update updates a feed in a transaction by calling u with the stored
@@ -301,5 +327,5 @@ func (f *FeedInfo) update(c appengine.Context, u func(stored FeedInfo) FeedInfo)
 	if err != nil {
 		return err
 	}
-	return memcache.Gob.Set(c, &memcache.Item{Key: k.StringID(), Object: f})
+	return cacheSetFeed(c, k, f)
 }
