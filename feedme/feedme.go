@@ -419,6 +419,13 @@ func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
 			errs = append(errs, err)
 		}
 	}
+	if len(errs) > 0 {
+		http.Error(w, errs.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusResetContent)
 }
 
 func refresh(c appengine.Context, k *datastore.Key) error {
