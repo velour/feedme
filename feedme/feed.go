@@ -38,7 +38,20 @@ type Article struct {
 	Title           string `datastore:",noindex"`
 	Link            string `datastore:",noindex"`
 	DescriptionData []byte `datastore:",noindex"`
-	When            time.Time
+
+	// When is either the publication time or the time that feedme first
+	// fetched this article from the feed.  For articles that are added
+	// on a newly subscribed feed, the publication time is used.  For
+	// articles that are added on a refresh of an already subscribed
+	// feed, the time of the refresh is used.
+	//
+	// Originally, this was strictly the publication time, as advertised in
+	// the feed.  Unfortunately, this time can be unreliable, and newly
+	// fetched articles may not have been correctly added to the "Latest"
+	// page if their publication date was old (due to caching, or just poor
+	// use of RSS/Atom).
+	When time.Time
+
 	// OriginTitle is the title of the feed from which this article originated.
 	OriginTitle string `datastore:",noindex"`
 }
@@ -161,6 +174,7 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 		}
 		stored[k.StringID()] = k
 	}
+	newFeed := len(stored) == 0
 
 	for _, a := range articles {
 		k := datastore.NewKey(c, articleKind, a.StringID(), 0, key)
@@ -169,6 +183,13 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 			delete(stored, id)
 			continue
 		}
+
+		if !newFeed {
+			// We already have articles for this feed; it is not new, so
+			// overwrite the publish time with the current time.
+			a.When = time.Now()
+		}
+
 		if _, err := datastore.Put(c, k, &a); err != nil {
 			return err
 		}
