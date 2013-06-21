@@ -94,6 +94,12 @@ type FeedInfo struct {
 
 	// LastFetch is the last time the feed was fetched from the source.
 	LastFetch time.Time `datastore:",noindex"`
+
+	// ArticleKeys is either empty or it contains the keys of the current
+	// articles for this feed.  If it is empty then a query must be performed
+	// to get the article keys.  If it is not empty then the query can be
+	// avoided.
+	ArticleKeys []*datastore.Key `datastore:",noindex"`
 }
 
 // EnsureFresh refreshes the feed only if it is stale.
@@ -124,6 +130,7 @@ func (f *FeedInfo) refresh(c appengine.Context) error {
 			*f = fnew
 		}
 		f.Refs = stored.Refs
+		f.ArticleKeys = stored.ArticleKeys
 		_, err = datastore.Put(c, key, f)
 		return err
 	}, nil)
@@ -161,23 +168,22 @@ func (f FeedInfo) readSource(c appengine.Context) (FeedInfo, Articles, error) {
 	return feed, articles, nil
 }
 
-func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
-	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-	q := datastore.NewQuery(articleKind).Ancestor(key).KeysOnly()
+func (f *FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
+	keys, err := f.articleKeys(c)
+	if err != nil {
+		return err
+	}
+
 	stored := make(map[string]*datastore.Key)
-	for it := q.Run(c); ; {
-		k, err := it.Next(nil)
-		if err == datastore.Done {
-			break
-		} else if err != nil {
-			return err
-		}
+	for _, k := range keys {
 		stored[k.StringID()] = k
 	}
 	newFeed := len(stored) == 0
 
+	var added []*datastore.Key
+	feedKey := datastore.NewKey(c, feedKind, f.Url, 0, nil)
 	for _, a := range articles {
-		k := datastore.NewKey(c, articleKind, a.StringID(), 0, key)
+		k := datastore.NewKey(c, articleKind, a.StringID(), 0, feedKey)
 		id := k.StringID()
 		if _, ok := stored[id]; ok {
 			delete(stored, id)
@@ -190,17 +196,56 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 			a.When = time.Now()
 		}
 
+		added = append(added, k)
 		if _, err := datastore.Put(c, k, &a); err != nil {
 			return err
 		}
 	}
 
-	for _, k := range stored {
+	deleted := stored
+	for _, k := range deleted {
 		if err := datastore.Delete(c, k); err != nil {
 			return err
 		}
 	}
-	return nil
+
+	if len(keys) == len(f.ArticleKeys) && len(added) == 0 && len(deleted) == 0 {
+		return nil
+	}
+
+	err = f.update(c, func(f FeedInfo) FeedInfo {
+		keys := added
+		for _, k := range f.ArticleKeys {
+			if _, ok := deleted[k.StringID()]; !ok {
+				keys = append(keys, k)
+			}
+		}
+		f.ArticleKeys = keys
+		return f
+	})
+	return err
+}
+
+// ArticleKeys returns the keys of all articles for this feed by either
+// returning the ArticleKeys field, or by performing a query.
+func (f *FeedInfo) articleKeys(c appengine.Context) ([]*datastore.Key, error) {
+	if len(f.ArticleKeys) > 0 {
+		return f.ArticleKeys, nil
+	}
+
+	feedKey := datastore.NewKey(c, feedKind, f.Url, 0, nil)
+	q := datastore.NewQuery(articleKind).Ancestor(feedKey).KeysOnly()
+	var keys []*datastore.Key
+	for it := q.Run(c); ; {
+		k, err := it.Next(nil)
+		if err == datastore.Done {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		keys = append(keys, k)
+	}
+	return keys, nil
 }
 
 // RmArticles removes the articles associated with a feed.
