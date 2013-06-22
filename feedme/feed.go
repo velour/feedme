@@ -8,6 +8,7 @@ import (
 	"errors"
 	"github.com/velour/feedme/webfeed"
 	"html/template"
+	"net/http"
 	"sort"
 	"strconv"
 	"time"
@@ -273,6 +274,9 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 	resp, err := urlfetch.Client(c).Get(url)
 	if err != nil {
 		return finfo, nil, err
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return finfo, nil, errors.New("HTTP error: " + http.StatusText(resp.StatusCode))
 	}
 	defer resp.Body.Close()
 
