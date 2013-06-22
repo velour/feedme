@@ -39,6 +39,8 @@ type Article struct {
 	Link            string `datastore:",noindex"`
 	DescriptionData []byte `datastore:",noindex"`
 
+	PubDate time.Time `datastore:",noindex"`
+
 	// When is either the publication time or the time that feedme first
 	// fetched this article from the feed.  For articles that are added
 	// on a newly subscribed feed, the publication time is used.  For
@@ -63,7 +65,7 @@ func (a Article) Description() template.HTML {
 // StringID returns a unique string that can be used to identify this
 // article in a datastore.Key.
 func (a Article) StringID() string {
-	return a.Title + strconv.FormatInt(a.When.UnixNano(), 10)
+	return a.Title + strconv.FormatInt(a.PubDate.UnixNano(), 10)
 }
 
 // Articles is a slice of Articles implementing sort.Interface.
@@ -317,6 +319,7 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 			Link:            ent.Link,
 			OriginTitle:     feed.Title,
 			DescriptionData: content,
+			PubDate:         ent.When,
 			When:            ent.When,
 		}
 	}
