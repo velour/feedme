@@ -14,3 +14,8 @@ indexes:
   ancestor: yes
   properties:
   - name: When
+
+- kind: Article
+  ancestor: yes
+  properties:
+  - name: WhenAdded
