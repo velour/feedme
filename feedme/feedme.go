@@ -102,7 +102,8 @@ func handleManage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	infos := make([]FeedInfo, len(page.User.Feeds))
-	if err = datastore.GetMulti(c, page.User.Feeds, infos); err != nil {
+	err = fixMissingFieldError(datastore.GetMulti(c, page.User.Feeds, infos))
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

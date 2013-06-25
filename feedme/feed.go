@@ -100,7 +100,7 @@ func (f *FeedInfo) refresh(c appengine.Context) error {
 	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
 		var stored FeedInfo
 		key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-		err := datastore.Get(c, key, &stored)
+		err := fixMissingFieldError(datastore.Get(c, key, &stored))
 		if err != nil && err != datastore.ErrNoSuchEntity {
 			return err
 		}
@@ -284,7 +284,7 @@ func getFeed(c appengine.Context, k *datastore.Key) (FeedInfo, error) {
 		return f, nil
 	}
 
-	if err := datastore.Get(c, k, &f); err != nil {
+	if err := fixMissingFieldError(datastore.Get(c, k, &f)); err != nil {
 		return FeedInfo{}, err
 	}
 
@@ -316,7 +316,7 @@ func (f *FeedInfo) update(c appengine.Context, u func(stored FeedInfo) FeedInfo)
 	k := datastore.NewKey(c, feedKind, f.Url, 0, nil)
 	err := datastore.RunInTransaction(c, func(c appengine.Context) error {
 		var stored FeedInfo
-		err := datastore.Get(c, k, &stored)
+		err := fixMissingFieldError(datastore.Get(c, k, &stored))
 		if err != nil && err != datastore.ErrNoSuchEntity {
 			return err
 		}
@@ -328,4 +328,33 @@ func (f *FeedInfo) update(c appengine.Context, u func(stored FeedInfo) FeedInfo)
 		return err
 	}
 	return cacheSetFeed(c, k, *f)
+}
+
+// Changes ErrFieldMismatch errors for the ArticleKeys field into nil.
+func fixMissingFieldError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	switch e := err.(type) {
+	case appengine.MultiError:
+		var multi appengine.MultiError
+		for _, err := range e {
+			if err := fixMissingFieldError(err); err != nil {
+				multi = append(multi, err)
+			}
+		}
+		if len(multi) == 0 {
+			return nil
+		}
+		return multi
+
+	case *datastore.ErrFieldMismatch:
+		if e.FieldName == "ArticleKeys" {
+			return nil
+		}
+		return err
+	}
+
+	return err
 }
