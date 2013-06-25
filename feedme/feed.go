@@ -151,21 +151,22 @@ func (f FeedInfo) readSource(c appengine.Context) (FeedInfo, Articles, error) {
 }
 
 func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
-	key := datastore.NewKey(c, feedKind, f.Url, 0, nil)
-	q := datastore.NewQuery(articleKind).Ancestor(key).KeysOnly()
+	feedKey := datastore.NewKey(c, feedKind, f.Url, 0, nil)
+	articleKeys, err := f.articleKeys(c)
+	if err != nil {
+		return err
+	}
+
 	stored := make(map[string]*datastore.Key)
-	for it := q.Run(c); ; {
-		k, err := it.Next(nil)
-		if err == datastore.Done {
-			break
-		} else if err != nil {
-			return err
-		}
+	for _, k := range articleKeys {
 		stored[k.StringID()] = k
 	}
 
-	for _, a := range articles {
-		k := datastore.NewKey(c, articleKind, a.StringID(), 0, key)
+	newKeys := make([]*datastore.Key, len(articles))
+	for i, a := range articles {
+		k := datastore.NewKey(c, articleKind, a.StringID(), 0, feedKey)
+		newKeys[i] = k
+
 		id := k.StringID()
 		if _, ok := stored[id]; ok {
 			delete(stored, id)
@@ -182,7 +183,44 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 			return err
 		}
 	}
+
+	item := memcache.Item{Key: articlesMcacheKey(feedKey), Object: newKeys}
+	memcache.Gob.Set(c, &item)
+
 	return nil
+}
+
+func (f FeedInfo) articleKeys(c appengine.Context) ([]*datastore.Key, error) {
+	feedKey := datastore.NewKey(c, feedKind, f.Url, 0, nil)
+	mcacheKey := articlesMcacheKey(feedKey)
+
+	var keys []*datastore.Key
+
+	if _, err := memcache.Gob.Get(c, mcacheKey, &keys); err == nil {
+		c.Debugf("Loaded article keys from memcache")
+		return keys, nil
+	}
+
+	c.Debugf("Querying for article keys")
+	q := datastore.NewQuery(articleKind).Ancestor(feedKey).KeysOnly()
+	for it := q.Run(c); ; {
+		k, err := it.Next(nil)
+		if err == datastore.Done {
+			break
+		} else if err != nil {
+			return nil, err
+		}
+		keys = append(keys, k)
+	}
+
+	item := memcache.Item{Key: mcacheKey, Object: keys}
+	memcache.Gob.Set(c, &item)
+
+	return keys, nil
+}
+
+func articlesMcacheKey(feedKey *datastore.Key) string {
+	return "articles:" + feedKey.StringID()
 }
 
 // RmArticles removes the articles associated with a feed.

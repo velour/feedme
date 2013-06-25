@@ -36,6 +36,10 @@ var (
 const (
 	latestDuration = 24 * time.Hour
 
+	// PageCacheExpiration is the duration that a user's latest or all page will
+	// be saved in the memcache.
+	pageCacheExpiration = 5 * time.Minute
+
 	managePage = "/manage"
 
 	// McacheFeedsKey is the memcache key used to access the cached
@@ -161,10 +165,10 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/":
 		page.Title = "Latest Articles"
-		page.Articles, page.Errors = articlesSince(c, uinfo, time.Now().Add(-latestDuration))
+		page.Articles, page.Errors = articles(c, uinfo, "latest")
 	case "/all":
 		page.Title = "All Articles"
-		page.Articles, page.Errors = articlesSince(c, uinfo, time.Time{})
+		page.Articles, page.Errors = articles(c, uinfo, "all")
 
 	default:
 		var key *datastore.Key
@@ -187,9 +191,23 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (Articles, []error) {
+func articles(c appengine.Context, uinfo UserInfo, page string) (Articles, []error) {
+	mcacheKey := page + ":" + user.Current(c).ID
+
 	var articles Articles
+	if _, err := memcache.Gob.Get(c, mcacheKey, &articles); err == nil {
+		c.Debugf("Loaded %s articles for %s from memcache", page, user.Current(c))
+		return articles, nil
+	}
+
+	c.Debugf("Querying for %s articles for %s", page, user.Current(c))
+
 	var errs []error
+	var t time.Time
+	if page == "latest" {
+		t = time.Now().Add(-latestDuration)
+	}
+
 	for _, key := range uinfo.Feeds {
 		f, err := getFeed(c, key)
 		if err != nil {
@@ -205,6 +223,14 @@ func articlesSince(c appengine.Context, uinfo UserInfo, t time.Time) (Articles, 
 		}
 		articles = append(articles, as...)
 	}
+
+	item := memcache.Item{
+		Key:        mcacheKey,
+		Object:     articles,
+		Expiration: pageCacheExpiration,
+	}
+	memcache.Gob.Set(c, &item)
+
 	return articles, errs
 }
 
