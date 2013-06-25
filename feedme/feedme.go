@@ -34,7 +34,7 @@ var (
 )
 
 const (
-	latestDuration = 18 * time.Hour
+	latestDuration = 24 * time.Hour
 
 	managePage = "/manage"
 
