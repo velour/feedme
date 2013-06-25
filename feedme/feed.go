@@ -35,10 +35,11 @@ var (
 
 // An Article is a single article from a feed.
 type Article struct {
-	Title           string `datastore:",noindex"`
-	Link            string `datastore:",noindex"`
-	DescriptionData []byte `datastore:",noindex"`
-	When            time.Time
+	Title           string    `datastore:",noindex"`
+	Link            string    `datastore:",noindex"`
+	DescriptionData []byte    `datastore:",noindex"`
+	When            time.Time `datastore:",noindex"`
+	WhenAdded       time.Time
 	// OriginTitle is the title of the feed from which this article originated.
 	OriginTitle string `datastore:",noindex"`
 }
@@ -130,7 +131,7 @@ func (f FeedInfo) articlesSince(c appengine.Context, t time.Time) (articles Arti
 	if t.IsZero() {
 		_, err = datastore.NewQuery(articleKind).Ancestor(key).GetAll(c, &articles)
 	} else {
-		_, err = datastore.NewQuery(articleKind).Ancestor(key).Filter("When >=", t).GetAll(c, &articles)
+		_, err = datastore.NewQuery(articleKind).Ancestor(key).Filter("WhenAdded >=", t).GetAll(c, &articles)
 	}
 	return
 }
@@ -169,6 +170,7 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 			delete(stored, id)
 			continue
 		}
+		a.WhenAdded = time.Now()
 		if _, err := datastore.Put(c, k, &a); err != nil {
 			return err
 		}
