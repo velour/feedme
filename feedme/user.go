@@ -39,7 +39,8 @@ func subscribe(c appengine.Context, f FeedInfo) error {
 			}
 		}
 
-		if err := datastore.Get(c, key, &f); err != nil && err != datastore.ErrNoSuchEntity {
+		err = fixMissingFieldError(datastore.Get(c, key, &f))
+		if err != nil && err != datastore.ErrNoSuchEntity {
 			return err
 		}
 
@@ -85,7 +86,8 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 			return nil
 		}
 
-		if err := datastore.Get(c, feedKey, &f); err != nil {
+		err = fixMissingFieldError(datastore.Get(c, feedKey, &f))
+		if err != nil {
 			return err
 		}
 
