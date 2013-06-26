@@ -162,6 +162,8 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 		stored[k.StringID()] = k
 	}
 
+	var nadded, nkept int
+	debug := ""
 	newKeys := make([]*datastore.Key, len(articles))
 	for i, a := range articles {
 		k := datastore.NewKey(c, articleKind, a.StringID(), 0, feedKey)
@@ -169,22 +171,29 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 
 		id := k.StringID()
 		if _, ok := stored[id]; ok {
-			c.Debugf("Keeping %s", id)
+			debug += "Keeping " + id + "\n"
+			nkept++
 			delete(stored, id)
 			continue
 		}
-		c.Debugf("Adding %s", id)
+		debug += "Adding " + id + "\n"
+		nadded++
 		a.WhenAdded = time.Now()
 		if _, err := datastore.Put(c, k, &a); err != nil {
 			return err
 		}
 	}
 
+	ndeleted := len(stored)
 	for _, k := range stored {
-		c.Debugf("Deleting %s", k.StringID())
+		debug += "Deleting " + k.StringID() + "\n"
 		if err := datastore.Delete(c, k); err != nil {
 			return err
 		}
+	}
+
+	if nadded > 0 || ndeleted > 0 {
+		c.Debugf("%s, added %d, kept %d, deleted %d\n%s", f.Url, nadded, nkept, ndeleted, debug)
 	}
 
 	item := memcache.Item{Key: articlesMcacheKey(feedKey), Object: newKeys}
