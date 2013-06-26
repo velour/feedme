@@ -52,7 +52,7 @@ func (a Article) Description() template.HTML {
 // StringID returns a unique string that can be used to identify this
 // article in a datastore.Key.
 func (a Article) StringID() string {
-	return a.Title + strconv.FormatInt(a.When.UnixNano(), 10)
+	return a.Title + a.When.Format("06-01-02;15:04:05")
 }
 
 // Articles is a slice of Articles implementing sort.Interface.
