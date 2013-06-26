@@ -58,7 +58,6 @@ func subscribe(c appengine.Context, f FeedInfo) error {
 
 	if f.Refs == 1 {
 		memcache.Delete(c, mcacheFeedsKey)
-		c.Debugf("adding a task to refresh %s\n", key)
 		t := taskqueue.NewPOSTTask("/refresh", map[string][]string{"feed": {key.Encode()}})
 		_, err = taskqueue.Add(c, t, "")
 	}

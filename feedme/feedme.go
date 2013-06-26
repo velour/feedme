@@ -183,7 +183,6 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 		page.Link = f.Link
 	}
 
-	c.Debugf("%d articles\n", len(page.Articles))
 	sort.Sort(page.Articles)
 
 	if err := templates.ExecuteTemplate(w, "articles.html", page); err != nil {
@@ -196,11 +195,8 @@ func articles(c appengine.Context, uinfo UserInfo, page string) (Articles, []err
 
 	var articles Articles
 	if _, err := memcache.Gob.Get(c, mcacheKey, &articles); err == nil {
-		c.Debugf("Loaded %s articles for %s from memcache", page, user.Current(c))
 		return articles, nil
 	}
-
-	c.Debugf("Querying for %s articles for %s", page, user.Current(c))
 
 	var errs []error
 	var t time.Time
@@ -279,10 +275,7 @@ func handleOpml(w http.ResponseWriter, r *http.Request) {
 
 	urls := opmlWalk(&b.Body, nil)
 
-	c.Debugf("Got %d URLs from OPML", len(urls))
-
 	for _, url := range urls {
-		c.Debugf("opml %s", url)
 		f, err := checkUrl(c, url)
 		if err != nil {
 			http.Error(w, "failed to check URL "+url+": "+err.Error(), http.StatusInternalServerError)
@@ -347,7 +340,6 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 		if curFeeds[url] {
 			delete(curFeeds, url)
 		} else {
-			c.Debugf("Subscribing to [%s]", url)
 			f, err := checkUrl(c, url)
 			if err != nil {
 				err = fmt.Errorf("Failed to read %s: %s", url, err.Error())
@@ -363,7 +355,6 @@ func handleUpdate(w http.ResponseWriter, r *http.Request) {
 
 	for url := range curFeeds {
 		k := datastore.NewKey(c, feedKind, url, 0, nil)
-		c.Debugf("Unsubscribing from [%s]", url)
 		if err := unsubscribe(c, k); err != nil {
 			err = fmt.Errorf("Failed to unsubscribe from %s: %s", url, err.Error())
 			errs = append(errs, err)
@@ -406,11 +397,10 @@ func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
 	var errs errorList
 	defer func() {
 		if len(errs) > 0 {
-			c.Debugf("Returning errors: %s\n", errs.Error())
+			c.Errorf(errs.Error())
 			http.Error(w, errs.Error(), http.StatusInternalServerError)
 			return
 		}
-		c.Debugf("Returning successfully\n")
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusResetContent)
 	}()
@@ -442,7 +432,7 @@ func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
 
 		item := memcache.Item{Key: mcacheFeedsKey, Object: encKeys}
 		if err := memcache.Gob.Set(c, &item); err != nil {
-			c.Debugf("Error setting memcache feed item: %s\n", err.Error())
+			c.Infof("Error setting memcache feed item: %s\n", err.Error())
 		}
 	}
 
@@ -454,7 +444,6 @@ func handleRefreshAll(w http.ResponseWriter, r *http.Request) {
 }
 
 func refresh(c appengine.Context, k *datastore.Key) error {
-	c.Debugf("refreshing %s\n", k)
 	f, err := getFeed(c, k)
 	if err == datastore.ErrNoSuchEntity {
 		return nil
