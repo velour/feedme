@@ -45,6 +45,9 @@ const (
 	// McacheFeedsKey is the memcache key used to access the cached
 	// slice of all feed keys.
 	mcacheFeedsKey = "mcacheFeedsKey"
+
+	mcacheLatestPrefix = "latest:"
+	mcacheAllPrefix    = "all:"
 )
 
 func init() {
@@ -165,10 +168,10 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	switch r.URL.Path {
 	case "/":
 		page.Title = "Latest Articles"
-		page.Articles, page.Errors = articles(c, uinfo, "latest")
+		page.Articles, page.Errors = articles(c, uinfo, mcacheLatestPrefix)
 	case "/all":
 		page.Title = "All Articles"
-		page.Articles, page.Errors = articles(c, uinfo, "all")
+		page.Articles, page.Errors = articles(c, uinfo, mcacheAllPrefix)
 
 	default:
 		var key *datastore.Key
@@ -190,8 +193,13 @@ func handleRoot(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func flushUserPageCache(c appengine.Context) {
+	memcache.Delete(c, mcacheLatestPrefix+user.Current(c).ID)
+	memcache.Delete(c, mcacheAllPrefix+user.Current(c).ID)
+}
+
 func articles(c appengine.Context, uinfo UserInfo, page string) (Articles, []error) {
-	mcacheKey := page + ":" + user.Current(c).ID
+	mcacheKey := page + user.Current(c).ID
 
 	var articles Articles
 	if _, err := memcache.Gob.Get(c, mcacheKey, &articles); err == nil {
@@ -200,7 +208,7 @@ func articles(c appengine.Context, uinfo UserInfo, page string) (Articles, []err
 
 	var errs []error
 	var t time.Time
-	if page == "latest" {
+	if page == mcacheLatestPrefix {
 		t = time.Now().Add(-latestDuration)
 	}
 
