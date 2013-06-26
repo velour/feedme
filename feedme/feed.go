@@ -169,9 +169,11 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 
 		id := k.StringID()
 		if _, ok := stored[id]; ok {
+			c.Debugf("Keeping %s", id)
 			delete(stored, id)
 			continue
 		}
+		c.Debugf("Adding %s", id)
 		a.WhenAdded = time.Now()
 		if _, err := datastore.Put(c, k, &a); err != nil {
 			return err
@@ -179,6 +181,7 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 	}
 
 	for _, k := range stored {
+		c.Debugf("Deleting %s", k.StringID())
 		if err := datastore.Delete(c, k); err != nil {
 			return err
 		}
