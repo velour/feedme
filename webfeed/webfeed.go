@@ -92,6 +92,8 @@ var rssTimeFormats = []string{
 	"Mon, 2 Jan 2006 15:04:05 MST",
 	"Mon, 2 Jan 06 15:04:05 -0700",
 	"02 January 2006",
+	"2006-01-02T15:04:05+00:00",
+	"Mon, 2 Jan 2006 15:04:05 Z",
 }
 
 // RssTime tries parsing a string using a variety of different time formats.
