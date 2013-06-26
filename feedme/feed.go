@@ -197,11 +197,9 @@ func (f FeedInfo) articleKeys(c appengine.Context) ([]*datastore.Key, error) {
 	var keys []*datastore.Key
 
 	if _, err := memcache.Gob.Get(c, mcacheKey, &keys); err == nil {
-		c.Debugf("Loaded article keys from memcache")
 		return keys, nil
 	}
 
-	c.Debugf("Querying for article keys")
 	q := datastore.NewQuery(articleKind).Ancestor(feedKey).KeysOnly()
 	for it := q.Run(c); ; {
 		k, err := it.Next(nil)
@@ -257,7 +255,7 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 	feed, err := webfeed.Read(resp.Body)
 	if err != nil {
 		if _, ok := err.(webfeed.ErrBadTime); ok {
-			c.Debugf("%s: %s", url, err.Error())
+			c.Infof("Ignoring bad time format for feed %s: %s", url, err.Error())
 			err = nil
 		} else {
 			err = errors.New("failed to fetch " + url + ": " + err.Error())
@@ -313,7 +311,7 @@ func checkUrl(c appengine.Context, url string) (FeedInfo, error) {
 	f, err := webfeed.Read(resp.Body)
 	if err != nil {
 		if _, ok := err.(webfeed.ErrBadTime); ok {
-			c.Debugf("%s: %s", url, err.Error())
+			c.Infof("Ignoring bad time format for feed %s: %s", url, err.Error())
 			err = nil
 		} else {
 			return FeedInfo{}, err
@@ -348,7 +346,7 @@ func cacheGetFeed(c appengine.Context, k *datastore.Key) (FeedInfo, error) {
 func cacheSetFeed(c appengine.Context, k *datastore.Key, f FeedInfo) error {
 	id := k.StringID()
 	if len(id) > mcacheKeyMax { // silently don't set the value
-		c.Debugf("Silently not caching feed with a big key: %s", id)
+		c.Infof("Not caching feed with a big key: %s", id)
 		return nil
 	}
 	return memcache.Gob.Set(c, &memcache.Item{Key: k.StringID(), Object: f})
