@@ -27,6 +27,7 @@ type Entry struct {
 	// Contents is the main contents of the entry in valid HTML or escaped HTML.
 	Content []byte
 	When    time.Time
+	ID      string
 }
 
 // Read reads a feed from an io.Reader and returns it or an error if one was encountered.
@@ -80,6 +81,7 @@ func rssFeed(r rss) (Feed, error) {
 			Summary: fixHtml(it.Link, it.Description),
 			Content: fixHtml(it.Link, it.Content.Data),
 			When:    when,
+			ID:      it.GUID,
 		}
 		f.Entries = append(f.Entries, ent)
 	}
@@ -125,6 +127,7 @@ func atomFeed(a feed) (Feed, error) {
 			Link:    ent.Link.Href,
 			Summary: fixHtml(ent.Link.Href, ent.Summary),
 			When:    ent.Updated,
+			ID:      ent.ID,
 		}
 		if len(ent.Content) > 0 {
 			e.Content = fixHtml(ent.Link.Href, ent.Content[0].Data())
@@ -142,7 +145,7 @@ type feed struct {
 	Links   []atomLink  `xml:"link"`
 	Updated time.Time   `xml:"updated"`
 	Author  []string    `xml:"author>name"`
-	Id      string      `xml:"id"`
+	ID      string      `xml:"id"`
 	Entries []atomEntry `xml:"entry"`
 	Rss     rss         `xml:"channel"`
 }
@@ -159,7 +162,7 @@ func (f *feed) link() string {
 type atomEntry struct {
 	Title   string        `xml:"title"`
 	Link    atomLink      `xml:"link"`
-	Id      string        `xml:"id"`
+	ID      string        `xml:"id"`
 	Updated time.Time     `xml:"updated"`
 	Author  []string      `xml:"author>name"`
 	Summary []byte        `xml:"summary"`
@@ -210,6 +213,9 @@ type rssItem struct {
 	Title       string `xml:"title"`
 	Link        string `xml:"link"`
 	Description []byte `xml:"description"`
+
+	// GUID is, unfortunately, an optional field.
+	GUID string `xml:"guid"`
 
 	// Content contains <content:encoded>, an extension used by Ars Technica's feeds.
 	Content rssContent `xml:"content encoded"`

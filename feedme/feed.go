@@ -40,18 +40,19 @@ type Article struct {
 	DescriptionData []byte    `datastore:",noindex"`
 	When            time.Time `datastore:",noindex"`
 	WhenAdded       time.Time
+
+	// Id is a unique identifier for an article; it is not stored in the datastore,
+	// but it is used as the article's datastore key. Atom feeds use the atom:id element.
+	// RSS feeds use the guid element if present, otherwise the "unique" id
+	// is just the title + the publish time.
+	id string `datastore:"-"` // probably unnecessary for an un-exported field.
+
 	// OriginTitle is the title of the feed from which this article originated.
 	OriginTitle string `datastore:",noindex"`
 }
 
 func (a Article) Description() template.HTML {
 	return template.HTML(a.DescriptionData)
-}
-
-// StringID returns a unique string that can be used to identify this
-// article in a datastore.Key.
-func (a Article) StringID() string {
-	return a.Title + a.When.Format("06-01-02;15:04:05")
 }
 
 // Articles is a slice of Articles implementing sort.Interface.
@@ -165,7 +166,7 @@ func (f FeedInfo) updateArticles(c appengine.Context, articles Articles) error {
 	debug := ""
 	newKeys := make([]*datastore.Key, len(articles))
 	for i, a := range articles {
-		k := datastore.NewKey(c, articleKind, a.StringID(), 0, feedKey)
+		k := datastore.NewKey(c, articleKind, a.id, 0, feedKey)
 		newKeys[i] = k
 
 		id := k.StringID()
@@ -299,12 +300,19 @@ func fetchUrl(c appengine.Context, url string) (FeedInfo, Articles, error) {
 		if title == "" {
 			title = ent.Link
 		}
+
+		id := ent.ID
+		if id == "" {
+			id = ent.Title + ";" + ent.When.Format("06-01-02;15:04:05")
+		}
+
 		as[i] = Article{
 			Title:           title,
 			Link:            ent.Link,
 			OriginTitle:     feed.Title,
 			DescriptionData: content,
 			When:            ent.When,
+			id:              id,
 		}
 	}
 
