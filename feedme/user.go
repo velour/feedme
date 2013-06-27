@@ -100,6 +100,9 @@ func unsubscribe(c appengine.Context, feedKey *datastore.Key) error {
 			if err := datastore.Delete(c, feedKey); err != nil {
 				return err
 			}
+
+			memcache.Delete(c, articlesMcacheKey(feedKey))
+
 		} else if _, err := datastore.Put(c, feedKey, &f); err != nil {
 			return err
 		}
