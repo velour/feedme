@@ -218,8 +218,9 @@ type rssItem struct {
 	// GUID is, unfortunately, an optional field.
 	GUID string `xml:"guid"`
 
-	// Content contains <content:encoded>, an extension used by Ars Technica's feeds.
-	Content rssContent `xml:"content encoded"`
+	// Content contains <content:encoded>, an extension used by Ars Technica's feeds,
+	// and some others.
+	Content rssContent `xml:"encoded"`
 	Updated string     `xml:"pubDate"`
 }
 
