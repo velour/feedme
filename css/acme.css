@@ -111,3 +111,11 @@ textarea#update {
 	height: 10em;
 	display: block;
 }
+
+a {
+	color: rgb(187,93,93);
+}
+
+a:visited {
+	color: #8888CC;
+}
