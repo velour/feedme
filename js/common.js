@@ -17,7 +17,7 @@ $(document).ready(function(){
 		$(elm).closest("article").show();
 	});
 
-	$(".wintag span.box").click(function(event){
+	$(".wintag .box").click(function(event){
 		var win = $(event.target).closest(".win");
 		var tag = win.find(".wintag");
 		var body = win.find(".winbody");
