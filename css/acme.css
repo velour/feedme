@@ -71,6 +71,7 @@ header#top nav a:not(:last-child) {
 	border-color: #8888CC;
 	background-color: #EAFFFF;
 	height: 100%;
+	float: left;
 }
 
 .wintag h1 {
