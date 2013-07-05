@@ -70,7 +70,8 @@ header#top nav a:not(:last-child) {
 	border-width: 3px; 
 	border-color: #8888CC;
 	background-color: #EAFFFF;
-	height: 100%;
+	width: 1em;
+	height: 2em;
 	float: left;
 }
 
