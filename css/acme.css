@@ -51,6 +51,7 @@ header#top nav a:not(:last-child) {
 .wintag {
 	background-color: #EAFFFF;
 	padding-top: 0px;
+	min-height: 2em;
 }
 
 .wintag h1 {
