@@ -4,14 +4,20 @@ body {
 	margin-left: auto;
 	margin-right: auto;
 	font-size: 100%;
-	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif
+	font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", sans-serif
 }
 
 div#maindiv {
 	background-color: #ffffff;
-	border-style: solid;
-	border-width: 2px;
-	border-color: rgb(82,164,164);
+}
+
+header#top {
+	padding: 1.25em 1em;
+}
+
+header#top h1 {
+	font-weight: normal;
+	margin: 0;
 }
 
 header#top form {
@@ -36,12 +42,7 @@ header#top nav a:not(:last-child) {
 	margin-top: 0;
 	margin-bottom: 0;
 	background-color: #FFFFEA;
-	border-style: solid none solid none;
-	border-width: 2px;
-}
-
-.win + .win {
-	border-top-style: none;
+	border-style: none;
 }
 
 .win span.error {
@@ -51,28 +52,20 @@ header#top nav a:not(:last-child) {
 .wintag {
 	background-color: #EAFFFF;
 	padding-top: 0px;
+	padding-bottom: 0.2em;
 	min-height: 2em;
-}
-
-.wintag h1 {
-	padding-top: 3px; /* article header .box border size */
-}
-
-.wintag.expanded {
-	border-bottom-style: solid;
-	border-bottom-width: 1px;
-	border-color: rgb(136,137,199);
 }
 
 .wintag .box {
 	margin-top: 0px;
 	margin-left: 0px;
 	border-style: solid;
-	border-width: 3px; 
+	border-width: 1px; 
 	border-color: #8888CC;
 	background-color: #EAFFFF;
+	font-size: medium;
 	width: 1em;
-	height: 2em;
+	height: 1em;
 	float: left;
 }
 
@@ -81,6 +74,8 @@ header#top nav a:not(:last-child) {
 	margin-top: 0;
 	margin-bottom: 0;
 	font-size: medium;
+	font-weight: normal;
+	padding-left: 0.5em;
 }
 
 .wintag h1 a {
@@ -90,16 +85,17 @@ header#top nav a:not(:last-child) {
 
 .wintag div.meta {
 	font-style: italic;
-	font-size: small;
+	font-size: x-small;
 	margin-left: 3%;
+	padding-left: 0.5em;
 }
 
 .winbody {
 	display: none;
 	margin-right: 3%;
 	margin-left: 3%;
-	margin-bottom: 1em;
-	margin-top: 1em;
+	padding-bottom: 1em;
+	padding-top: 1em;
 	overflow: auto;
 }
 

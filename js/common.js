@@ -1,12 +1,10 @@
 var feedme = {
 	collapseAll: function () {
 		$(".winbody").hide();
-		$(".wintag").removeClass("expanded");
 	},
 
 	expandAll: function () {
 		$(".winbody").show();
-		$(".wintag").addClass("expanded");
 	},
 }
 
@@ -18,15 +16,14 @@ $(document).ready(function(){
 	});
 
 	$(".wintag .box").click(function(event){
+		$(event.target).blur();
 		var win = $(event.target).closest(".win");
 		var tag = win.find(".wintag");
 		var body = win.find(".winbody");
 		if (body.css("display") === "none") {
 			body.show();
-			tag.addClass("expanded");
 		} else {
 			body.hide();
-			tag.removeClass("expanded");
 		}
 	})
 });
