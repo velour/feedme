@@ -36,12 +36,7 @@ header#top nav a:not(:last-child) {
 	margin-top: 0;
 	margin-bottom: 0;
 	background-color: #FFFFEA;
-	border-style: solid none solid none;
-	border-width: 2px;
-}
-
-.win + .win {
-	border-top-style: none;
+	border-style: none;
 }
 
 .win span.error {
@@ -51,17 +46,12 @@ header#top nav a:not(:last-child) {
 .wintag {
 	background-color: #EAFFFF;
 	padding-top: 0px;
+	padding-bottom: 0.2em;
 	min-height: 2em;
 }
 
 .wintag h1 {
 	padding-top: 3px; /* article header .box border size */
-}
-
-.wintag.expanded {
-	border-bottom-style: solid;
-	border-bottom-width: 1px;
-	border-color: rgb(136,137,199);
 }
 
 .wintag .box {
@@ -81,6 +71,7 @@ header#top nav a:not(:last-child) {
 	margin-top: 0;
 	margin-bottom: 0;
 	font-size: medium;
+	padding-left: 0.5em;
 }
 
 .wintag h1 a {
@@ -92,14 +83,15 @@ header#top nav a:not(:last-child) {
 	font-style: italic;
 	font-size: small;
 	margin-left: 3%;
+	padding-left: 0.5em;
 }
 
 .winbody {
 	display: none;
 	margin-right: 3%;
 	margin-left: 3%;
-	margin-bottom: 1em;
-	margin-top: 1em;
+	padding-bottom: 1em;
+	padding-top: 1em;
 	overflow: auto;
 }
 
