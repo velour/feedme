@@ -9,18 +9,15 @@ body {
 
 div#maindiv {
 	background-color: #ffffff;
-	border-style: solid;
-	border-width: 2px;
-	border-color: rgb(82,164,164);
 }
 
 header#top {
-	padding-left: 1em;
-	padding-right: 1em;
+	padding: 1.25em 1em;
 }
 
 header#top h1 {
 	font-weight: normal;
+	margin: 0;
 }
 
 header#top form {
