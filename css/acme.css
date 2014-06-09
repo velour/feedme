@@ -50,10 +50,6 @@ header#top nav a:not(:last-child) {
 	min-height: 2em;
 }
 
-.wintag h1 {
-	padding-top: 3px; /* article header .box border size */
-}
-
 .wintag .box {
 	margin-top: 0px;
 	margin-left: 0px;
