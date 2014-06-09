@@ -67,6 +67,7 @@ header#top nav a:not(:last-child) {
 	margin-top: 0;
 	margin-bottom: 0;
 	font-size: medium;
+	font-weight: normal;
 	padding-left: 0.5em;
 }
 
