@@ -87,7 +87,7 @@ header#top nav a:not(:last-child) {
 
 .wintag div.meta {
 	font-style: italic;
-	font-size: small;
+	font-size: x-small;
 	margin-left: 3%;
 	padding-left: 0.5em;
 }
