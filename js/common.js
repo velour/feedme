@@ -16,6 +16,7 @@ $(document).ready(function(){
 	});
 
 	$(".wintag .box").click(function(event){
+		$(event.target).blur();
 		var win = $(event.target).closest(".win");
 		var tag = win.find(".wintag");
 		var body = win.find(".winbody");
