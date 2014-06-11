@@ -57,11 +57,11 @@ header#top nav a:not(:last-child) {
 }
 
 .wintag .box {
-	margin-top: 0px;
-	margin-left: 0px;
+	margin-top: 0.1em;
+	margin-left: 0.25em;
 	border-style: solid;
 	border-width: 1px; 
-	border-color: #8888CC;
+	border-color: #6666AA;
 	background-color: #EAFFFF;
 	font-size: medium;
 	width: 1em;
