@@ -5,11 +5,14 @@ import (
 	"encoding/xml"
 	"errors"
 	"io"
+	"log"
 	"net/url"
+	"strings"
 	"time"
 
 	"code.google.com/p/go.net/html"
 	"code.google.com/p/go.net/html/atom"
+	"github.com/eaburns/pp"
 )
 
 type Feed struct {
@@ -75,10 +78,14 @@ func rssFeed(r rss) (Feed, error) {
 		if err == nil && e != nil {
 			err = e
 		}
+		descr := goodAsText(it.Description)
+		if len(descr) == 0 {
+			descr = []byte(it.Link)
+		}
 		ent := Entry{
 			Title:   it.Title,
 			Link:    it.Link,
-			Summary: fixHtml(it.Link, it.Description),
+			Summary: descr,
 			Content: fixHtml(it.Link, it.Content.Data),
 			When:    when,
 			ID:      it.GUID,
@@ -297,4 +304,75 @@ func walk(root *html.Node, f func(*html.Node)) {
 	for c := root.FirstChild; c != nil; c = c.NextSibling {
 		walk(c, f)
 	}
+}
+
+// GoodAsText applies some heuristics to make the data look good when displayed
+// as simple text. For example, if the data is escaped HTML then other heuristics are
+// applied to remove the HTML. For example if the data contains an HTML image tag,
+// goodAsText will return the alt text. If nothing good is found then an empty slice is
+// returned.
+func goodAsText(d []byte) []byte {
+	unesc := html.UnescapeString(string(d))
+	nodes, err := html.ParseFragment(strings.NewReader(unesc), bodyNode)
+	if err != nil {
+		log.Printf("failed to parse [%s] as HTML: %v", unesc, err)
+		return d
+	}
+
+	var buf bytes.Buffer
+	for _, root := range nodes {
+		walk(root, func(n *html.Node) {
+			if n.Type == html.TextNode {
+				buf.WriteString(strings.TrimSpace(n.Data))
+				return
+			}
+
+			if n := buf.Len(); n > 0 && buf.Bytes()[n-1] != ' ' {
+				buf.WriteString(" ")
+			}
+			if n.DataAtom == atom.Img {
+				if alt := altTextOrEmpty(n); alt != "" {
+					buf.WriteString(alt)
+				}
+			}
+		})
+	}
+	return buf.Bytes()
+}
+
+// AltTextOrEmpty returns the alt text of an image node wrapped in "[" and "]".
+// If there is no alt text, the empty string is returned. The node must be an IMG
+// node.
+func altTextOrEmpty(n *html.Node) string {
+	if n.Type != html.ElementNode || n.DataAtom != atom.Img {
+		panic("expected an img node")
+	}
+	for _, attr := range n.Attr {
+		if attr.Key == "alt" {
+			return "[" + attr.Val + "]"
+		}
+	}
+	return ""
+}
+
+var bodyNode = getBodyNode()
+
+// GetBodyNode returns an BODY node nested within an HTML node.
+func getBodyNode() *html.Node {
+	ns, err := html.ParseFragment(strings.NewReader("<html><body></body></html>"), nil)
+	if err != nil {
+		panic("error generating context")
+	}
+	if len(ns) == 0 {
+		panic("no nodes generating context")
+	}
+	h := ns[0]
+	if h.Type != html.ElementNode || h.DataAtom != atom.Html {
+		panic("expected an HTML node, got " + pp.MustString(h))
+	}
+	b := h.LastChild
+	if b.Type != html.ElementNode || b.DataAtom != atom.Body {
+		panic("expected a BODY node, got " + pp.MustString(b))
+	}
+	return b
 }
