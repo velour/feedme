@@ -11,12 +11,14 @@ func TestFixHtml(t *testing.T) {
 		{"<div></div></div>", "<div></div>"},
 		{"</foo>", ""},
 		{"</foo>bar<div>baz</div>", "bar<div>baz</div>"},
+		{`<img src="foo.png"/>`, `<img src="http://test.com/foo.png"/>`},
+		{`<img src="http://otherdomain.com/foo.png"/>`, `<img src="http://otherdomain.com/foo.png"/>`},
 	}
 
 	for _, test := range tests {
-		o := string(fixHtml([]byte(test.in)))
+		o := string(fixHtml("http://test.com/", []byte(test.in)))
 		if o != test.out {
-			t.Errorf("Expected [%s] to fix to [%s], but got [%s]", test.in, test.out, o)
+			t.Errorf(`fixHtml("http://test.com/", %s)=%s, want %s`, test.in, o, test.out)
 		}
 	}
 }
