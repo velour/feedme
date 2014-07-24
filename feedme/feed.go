@@ -6,11 +6,12 @@ import (
 	"appengine/memcache"
 	"appengine/urlfetch"
 	"errors"
-	"github.com/velour/feedme/webfeed"
 	"html/template"
 	"net/http"
 	"sort"
 	"time"
+
+	"webfeed"
 )
 
 const (
