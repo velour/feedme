@@ -12,7 +12,7 @@ import (
 
 	"code.google.com/p/go.net/html"
 	"code.google.com/p/go.net/html/atom"
-	"github.com/eaburns/pp"
+	"github.com/eaburns/pretty"
 )
 
 type Feed struct {
@@ -82,11 +82,16 @@ func rssFeed(r rss) (Feed, error) {
 		if len(descr) == 0 {
 			descr = []byte(it.Link)
 		}
+		content := fixHtml(it.Link, it.Content.Data)
+		// If there is no contents, then use the maybe-not-good-as-text description.
+		if len(content) == 0 {
+			content = it.Description
+		}
 		ent := Entry{
 			Title:   it.Title,
 			Link:    it.Link,
 			Summary: descr,
-			Content: fixHtml(it.Link, it.Content.Data),
+			Content: content,
 			When:    when,
 			ID:      it.GUID,
 		}
@@ -368,11 +373,11 @@ func getBodyNode() *html.Node {
 	}
 	h := ns[0]
 	if h.Type != html.ElementNode || h.DataAtom != atom.Html {
-		panic("expected an HTML node, got " + pp.MustString(h))
+		panic("expected an HTML node, got " + pretty.String(h))
 	}
 	b := h.LastChild
 	if b.Type != html.ElementNode || b.DataAtom != atom.Body {
-		panic("expected a BODY node, got " + pp.MustString(b))
+		panic("expected a BODY node, got " + pretty.String(b))
 	}
 	return b
 }
