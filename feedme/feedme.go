@@ -28,6 +28,7 @@ var (
 	funcs = template.FuncMap{
 		"dateTime": func(t time.Time) string { return t.Format("2006-01-02 15:04:05") },
 		"stringEq": func(a, b string) bool { return a == b },
+		"title": func(s string) string { return strings.Title(s) },
 	}
 
 	templates = template.Must(template.New("t").Funcs(funcs).ParseFiles(templateFiles...))
