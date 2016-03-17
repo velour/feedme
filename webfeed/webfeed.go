@@ -12,7 +12,6 @@ import (
 
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
-	"github.com/eaburns/pretty"
 )
 
 type Feed struct {
@@ -372,12 +371,6 @@ func getBodyNode() *html.Node {
 		panic("no nodes generating context")
 	}
 	h := ns[0]
-	if h.Type != html.ElementNode || h.DataAtom != atom.Html {
-		panic("expected an HTML node, got " + pretty.String(h))
-	}
 	b := h.LastChild
-	if b.Type != html.ElementNode || b.DataAtom != atom.Body {
-		panic("expected a BODY node, got " + pretty.String(b))
-	}
 	return b
 }
