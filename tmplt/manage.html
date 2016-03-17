@@ -1,25 +1,53 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
-<link rel="stylesheet" href="css/acme.css">
-<title>Feed Me!</title>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>Feed me!</title>
+
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+
+	<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>
+
+	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+	<!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+	<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+
+	<style type="text/css">
+		.container {
+			font-family: Baskerville, "Bell MT", "Hoefler Text", Georgia, serif;
+		}
+	</style>
 </head>
 
 <body>
-<div id="maindiv">
-<header id="top">
-{{template "navbar.html" .}}
-<h1><span class="title">{{.Title}}</span></h1>
-</header>
 
-<div class="win">
-<div class="wintag">
-	<button class="box"></button>
-	<h1>Update Subscriptions</h1>
+<div class="container">
+
+<div class="row">
+<div class="col-md-12">
+	<nav>
+	<a href="{{.Logout}}">Logout</a> | 
+	{{if stringEq .Title "Feeds" | not}}<a href="/manage">Manage</a> |{{end}}
+	{{if stringEq .Title "Latest Articles" | not}}<a href="/">Latest</a> |{{end}}
+	{{if stringEq .Title "All Articles" | not}}<a href="/all">All</a>{{end}}
+	</nav>
+	<h1>{{.Title}}</h1>
 </div>
-<div class="winbody">
+</div>
+
+<div class="row">
+<div class="col-md-8 col-md-offset-2">
+
+<div class="list-group">
+
+<div class="list-group-item">
+	<h1>Update Subscriptions</h1>
 	<form action="/update" method="post">
 	<textarea id="update" name="urls">{{range .Feeds}}{{.Url}}
 {{end}}</textarea>
@@ -29,11 +57,25 @@
 	<input type="submit" value="OPML Subscribe"><input type="file" accept=".xml" name="opml">
 	</form>
 </div>
-</div>
 
 {{range .Feeds}}
-{{template "feed.html" .}}
+<div class="list-group-item">
+	<h4><a href="/{{.EncodedKey}}">{{.Title}}</a></h4>
+	<p>{{.Url}}</p>
+	{{if .Fresh}}Last Fetched: <time datetime="{{dateTime .LastFetch}}"></time>
+	{{else}}
+	<form action="/refresh" method="post" enctype="multipart/form-data">
+	<input type="submit" value="Refresh">
+	<input type="hidden" value="{{.EncodedKey}}" name="feed">
+	</form>
+	{{end}}
+</div>
 {{end}}
+</div>
+
+</div>
+</div>
+</div>
 </div>
 
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>

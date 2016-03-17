@@ -18,10 +18,7 @@ import (
 
 var (
 	templateFiles = []string{
-		"tmplt/navbar.html",
-		"tmplt/feed.html",
 		"tmplt/manage.html",
-		"tmplt/article.html",
 		"tmplt/articles.html",
 	}
 
