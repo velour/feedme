@@ -30,14 +30,14 @@
 <div class="container">
 
 <div class="row">
-<div class="col-md-12">
+<div class="col-md-8 col-md-offset-2">
 	<nav>
 	<a href="{{.Logout}}">Logout</a> | 
 	{{if stringEq .Title "Feeds" | not}}<a href="/manage">Manage</a> |{{end}}
 	{{if stringEq .Title "Latest Articles" | not}}<a href="/">Latest</a> |{{end}}
 	{{if stringEq .Title "All Articles" | not}}<a href="/all">All</a>{{end}}
 	</nav>
-	<h1>{{.Title}}</h1>
+	<h1>🌐 {{.Title}}</h1>
 </div>
 </div>
 
